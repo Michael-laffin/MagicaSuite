@@ -1,49 +1,168 @@
 import React, { useState } from 'react';
-import { Terminal, Sparkles } from 'lucide-react';
+import { Zap, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface MagicalToolWindowProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  title: string;
+}
+
+const MagicalToolWindow: React.FC<MagicalToolWindowProps> = ({ isOpen, onClose, children, title }) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop with lighter blur effect */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40"
+            onClick={onClose}
+          />
+
+          {/* Tool Window */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0, y: 20 }}
+            animate={{ 
+              scale: 1, 
+              opacity: 1, 
+              y: 0,
+              transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 25
+              }
+            }}
+            exit={{ 
+              scale: 0.8, 
+              opacity: 0, 
+              y: 20,
+              transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 25
+              }
+            }}
+            className="fixed top-[30%] left-[40%] -translate-x-1/2 -translate-y-1/2 w-[40vw] max-w-[500px] h-[40vh] max-h-[400px] 
+                     bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-gray-900/95 
+                     rounded-xl border border-blue-500/20 shadow-2xl z-50 overflow-hidden"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-blue-500/20">
+              <h2 className="text-xl font-semibold text-white">{title}</h2>
+              <motion.button
+                whileHover={{ scale: 1.1, rotate: 90 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={onClose}
+                className="p-1 rounded-full hover:bg-white/10 transition-colors"
+              >
+                <Sparkles className="w-6 h-6 text-gray-400" />
+              </motion.button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 h-[calc(100%-5rem)] overflow-y-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex flex-col items-center justify-center h-full"
+              >
+                <motion.div
+                  animate={{ 
+                    scale: [1, 1.1, 1],
+                    rotate: [0, 5, -5, 0]
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: "reverse"
+                  }}
+                >
+                  <Sparkles className="w-16 h-16 text-blue-400 mb-6" />
+                </motion.div>
+                <motion.h3
+                  className="text-2xl font-bold text-blue-400 mb-4"
+                  animate={{ 
+                    y: [0, -10, 0],
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    repeat: Infinity,
+                    repeatType: "reverse"
+                  }}
+                >
+                  ✨ Coming Soon ✨
+                </motion.h3>
+                <motion.p
+                  className="text-gray-400 text-center max-w-md"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  Our magical developers are crafting something special just for you.
+                  Stay tuned for an enchanting experience!
+                </motion.p>
+              </motion.div>
+            </div>
+
+            {/* Magical corner effects */}
+            <div className="absolute -top-20 -right-20 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl" />
+            <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-purple-500/20 rounded-full blur-3xl" />
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
 
 export default function Tech() {
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
+  const [activeTool, setActiveTool] = useState<string | null>(null);
 
   const tools = [
     {
-      name: 'Code Generator',
-      description: 'Generate code snippets and boilerplates.'
+      name: 'Code Snippet Manager',
+      description: 'Organize and share code snippets.'
     },
     {
       name: 'API Tester',
       description: 'Test and debug API endpoints.'
     },
     {
-      name: 'Database Manager',
-      description: 'Manage and query databases.'
+      name: 'Database Explorer',
+      description: 'Browse and query databases.'
     },
     {
-      name: 'Git Helper',
-      description: 'Simplify Git operations and workflows.'
+      name: 'Git Manager',
+      description: 'Manage git repositories easily.'
     },
     {
-      name: 'Cloud Manager',
-      description: 'Monitor cloud resources and services.'
+      name: 'Deploy Helper',
+      description: 'Streamline deployment process.'
     },
     {
-      name: 'Security Scanner',
-      description: 'Scan code for security vulnerabilities.'
+      name: 'Debug Console',
+      description: 'Advanced debugging tools.'
     },
     {
       name: 'Performance Monitor',
-      description: 'Track application performance metrics.'
+      description: 'Track system performance.'
     },
     {
-      name: 'DevOps Assistant',
-      description: 'Automate development operations.'
-    },
-    {
-      name: 'Code Formatter',
-      description: 'Format and beautify code automatically.'
+      name: 'Security Scanner',
+      description: 'Identify security issues.'
     },
     {
       name: 'Documentation Generator',
-      description: 'Generate code documentation.'
+      description: 'Auto-generate documentation.'
+    },
+    {
+      name: 'Config Manager',
+      description: 'Manage configuration files.'
     }
   ];
 
@@ -51,17 +170,17 @@ export default function Tech() {
     <div className="p-6 min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Header with magical effects */}
       <div className="flex items-center mb-8 relative">
-        <div className="absolute -left-3 -top-3 w-16 h-16 bg-indigo-500/20 rounded-full blur-xl animate-pulse" />
+        <div className="absolute -left-3 -top-3 w-16 h-16 bg-blue-500/20 rounded-full blur-xl animate-pulse" />
         <div className="relative flex items-center">
-          <Terminal className="h-10 w-10 text-indigo-400 mr-4 animate-float" />
+          <Zap className="h-10 w-10 text-blue-400 mr-4 animate-float" />
           <div>
             <h1 className="text-3xl font-bold text-white mb-1 relative group">
               Tech Tools
               <span className="absolute -top-1 -right-2">
-                <Sparkles className="h-4 w-4 text-indigo-400 animate-sparkle" />
+                <Sparkles className="h-4 w-4 text-blue-400 animate-sparkle" />
               </span>
             </h1>
-            <p className="text-indigo-300/60">Power up your development workflow</p>
+            <p className="text-blue-300/60">Power up your development workflow</p>
           </div>
         </div>
       </div>
@@ -71,6 +190,7 @@ export default function Tech() {
         {tools.map((tool) => (
           <div
             key={tool.name}
+            onClick={() => setActiveTool(tool.name)}
             onMouseEnter={() => setHoveredTool(tool.name)}
             onMouseLeave={() => setHoveredTool(null)}
             className={`
@@ -78,16 +198,16 @@ export default function Tech() {
               bg-gradient-to-br from-gray-800/50 via-gray-700/30 to-gray-800/50
               backdrop-blur-sm
               p-6 rounded-xl
-              border border-indigo-500/20 hover:border-indigo-500/40
+              border border-blue-500/20 hover:border-blue-500/40
               transition-all duration-500
               hover:scale-[1.02]
-              ${hoveredTool === tool.name ? 'shadow-[0_0_30px_-5px_rgba(99,102,241,0.3)]' : ''}
+              ${hoveredTool === tool.name ? 'shadow-[0_0_30px_-5px_rgba(59,130,246,0.3)]' : ''}
               cursor-pointer
               overflow-hidden
             `}
           >
             {/* Animated gradient background */}
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 via-violet-400/20 to-indigo-600/20 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-cyan-400/20 to-blue-600/20 opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-500" />
             
             {/* Content */}
             <div className="relative">
@@ -103,16 +223,25 @@ export default function Tech() {
             {hoveredTool === tool.name && (
               <>
                 <div className="absolute -top-2 -right-2 animate-sparkle">
-                  <Sparkles className="h-4 w-4 text-indigo-400" />
+                  <Sparkles className="h-4 w-4 text-blue-400" />
                 </div>
                 <div className="absolute bottom-0 right-1/4 translate-y-1/2 animate-sparkle animation-delay-2000">
-                  <Sparkles className="h-3 w-3 text-indigo-400" />
+                  <Sparkles className="h-3 w-3 text-blue-400" />
                 </div>
               </>
             )}
           </div>
         ))}
       </div>
+
+      {/* Magical Tool Window */}
+      <MagicalToolWindow
+        isOpen={activeTool !== null}
+        onClose={() => setActiveTool(null)}
+        title={activeTool || ''}
+      >
+        <div />
+      </MagicalToolWindow>
     </div>
   );
 }

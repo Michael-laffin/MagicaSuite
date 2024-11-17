@@ -1,8 +1,80 @@
 import React, { useState } from 'react';
 import { Zap, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+interface MagicalToolWindowProps {
+  isOpen: boolean;
+  onClose: () => void;
+  children: React.ReactNode;
+  title: string;
+}
+
+const MagicalToolWindow: React.FC<MagicalToolWindowProps> = ({ isOpen, onClose, children, title }) => {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop with lighter blur effect */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40"
+            onClick={onClose}
+          />
+
+          {/* Tool Window */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0, y: 20 }}
+            animate={{ 
+              scale: 1, 
+              opacity: 1, 
+              y: 0,
+              transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 25
+              }
+            }}
+            exit={{ 
+              scale: 0.8, 
+              opacity: 0, 
+              y: 20,
+              transition: {
+                type: "spring",
+                stiffness: 300,
+                damping: 25
+              }
+            }}
+            className="fixed top-[30%] left-[40%] -translate-x-1/2 -translate-y-1/2 w-[40vw] max-w-[500px] h-[40vh] max-h-[400px] 
+                     bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-gray-900/95 
+                     rounded-xl border border-blue-500/20 shadow-2xl z-50 overflow-hidden"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-blue-500/20">
+              <h3 className="text-lg font-semibold text-white">{title}</h3>
+              <button
+                onClick={onClose}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 text-gray-300">
+              {children}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+};
 
 export default function Productivity() {
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
+  const [activeTool, setActiveTool] = useState<string | null>(null);
 
   const tools = [
     {
@@ -47,6 +119,16 @@ export default function Productivity() {
     }
   ];
 
+  const renderToolContent = (toolName: string) => {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-400 text-lg">
+          {toolName} content coming soon...
+        </p>
+      </div>
+    );
+  };
+
   return (
     <div className="p-6 min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Header with magical effects */}
@@ -71,6 +153,7 @@ export default function Productivity() {
         {tools.map((tool) => (
           <div
             key={tool.name}
+            onClick={() => setActiveTool(tool.name)}
             onMouseEnter={() => setHoveredTool(tool.name)}
             onMouseLeave={() => setHoveredTool(null)}
             className={`
@@ -113,6 +196,66 @@ export default function Productivity() {
           </div>
         ))}
       </div>
+
+      {/* Magical Tool Window */}
+      <AnimatePresence>
+        {activeTool !== null && (
+          <>
+            {/* Backdrop with lighter blur effect */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40"
+              onClick={() => setActiveTool(null)}
+            />
+
+            {/* Tool Window */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0, y: 20 }}
+              animate={{ 
+                scale: 1, 
+                opacity: 1, 
+                y: 0,
+                transition: {
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 25
+                }
+              }}
+              exit={{ 
+                scale: 0.8, 
+                opacity: 0, 
+                y: 20,
+                transition: {
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 25
+                }
+              }}
+              className="fixed top-[30%] left-[40%] -translate-x-1/2 -translate-y-1/2 w-[40vw] max-w-[500px] h-[40vh] max-h-[400px] 
+                     bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-gray-900/95 
+                     rounded-xl border border-blue-500/20 shadow-2xl z-50 overflow-hidden"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-blue-500/20">
+                <h3 className="text-lg font-semibold text-white">{activeTool}</h3>
+                <button
+                  onClick={() => setActiveTool(null)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-4 text-gray-300">
+                {activeTool && renderToolContent(activeTool)}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

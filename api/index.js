@@ -1,91 +1,77 @@
-require('dotenv').config({ path: '../.env' });
+require('dotenv').config();
 const express = require('express');
-const cors = require('cors');
 const admin = require('firebase-admin');
-const stripeRoutes = require('./routes/stripe');
-const stripe = require('stripe')(process.env.VITE_STRIPE_SECRET_KEY);
+const cors = require('cors');
+const morgan = require('morgan');
+const path = require('path');
 
 // Initialize Firebase Admin
-admin.initializeApp({
-  credential: admin.credential.applicationDefault()
-});
-
-// Initialize Firestore
-const db = admin.firestore();
+let serviceAccount;
+try {
+  serviceAccount = require('./firebase-service-account.json');
+  if (!serviceAccount.project_id || !serviceAccount.private_key || !serviceAccount.client_email) {
+    throw new Error('Invalid service account file: missing required fields');
+  }
+  
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    projectId: serviceAccount.project_id // Use project_id from service account
+  });
+  console.log('Firebase Admin initialized successfully with project:', serviceAccount.project_id);
+} catch (error) {
+  console.error('Error initializing Firebase Admin:', {
+    message: error.message,
+    stack: error.stack,
+    code: error.code
+  });
+  process.exit(1); // Exit if Firebase Admin fails to initialize
+}
 
 const app = express();
 const port = process.env.PORT || 3001;
 
+// Debug middleware to log requests
+app.use((req, res, next) => {
+  console.log('Request:', {
+    method: req.method,
+    path: req.path,
+    headers: {
+      ...req.headers,
+      authorization: req.headers.authorization ? '[REDACTED]' : undefined
+    },
+    body: req.body
+  });
+  next();
+});
+
 // Middleware
 app.use(cors());
+app.use(morgan('dev'));
 app.use(express.json());
 
-// Special middleware for Stripe webhooks
-app.use('/api/webhook', express.raw({ type: 'application/json' }));
+// Import routes
+const userRoutes = require('./routes/user.js');
 
-// Use Stripe routes
-app.use('/api', stripeRoutes);
+// API Routes
+app.use('/api', userRoutes);
 
-app.post('/api/users', async (req, res) => {
-  try {
-    const { userId, userData } = req.body;
-    await db.collection('users').doc(userId).set({
-      ...userData,
-      createdAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error creating user:', error);
-    res.status(500).json({ error: error.message });
-  }
+// Basic error handling
+app.use((err, req, res, next) => {
+  console.error('Error details:', {
+    message: err.message,
+    stack: err.stack,
+    code: err.code
+  });
+  
+  res.status(500).json({
+    error: 'Internal Server Error',
+    message: process.env.NODE_ENV === 'development' ? err.message : 'An error occurred'
+  });
 });
 
-app.get('/api/users/:userId', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const userDoc = await db.collection('users').doc(userId).get();
-    
-    if (!userDoc.exists) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const userData = userDoc.data();
-    res.json(userData);
-  } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.put('/api/users/:userId', async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const updateData = req.body;
-    
-    await db.collection('users').doc(userId).update({
-      ...updateData,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp()
-    });
-    
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error updating user:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.post('/api/update-payment-status', async (req, res) => {
-  try {
-    const { userId, status } = req.body;
-    // Here you would typically update the user's payment status in your database
-    console.log('Updating payment status for user:', userId, 'to:', status);
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error updating payment status:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
+// Start server
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
+  console.log('Environment:', process.env.NODE_ENV || 'development');
+  console.log('Firebase project ID:', serviceAccount.project_id);
 });
