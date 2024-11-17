@@ -1,5 +1,7 @@
+export type CategoryId = 'productivity' | 'marketing' | 'business' | 'creativity' | 'analytics' | 'tech';
+
 export interface Category {
-  id: string;
+  id: CategoryId;
   name: string;
   description: string;
   icon: string;
@@ -9,7 +11,7 @@ export interface Tool {
   id: string;
   name: string;
   description: string;
-  category: string;
+  category: CategoryId;
   icon: string;
 }
 

@@ -1,9 +1,11 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navigation from './components/Navigation';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
+import PaymentSuccess from './pages/PaymentSuccess';
+import PaymentCanceled from './pages/PaymentCanceled';
 import { Sparkles, ArrowRight, CheckCircle2, Star, Users, Wand2, Check } from 'lucide-react';
 import { AuthProvider } from './hooks/useAuth';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -303,6 +305,8 @@ function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/success" element={<PaymentSuccess />} />
+            <Route path="/canceled" element={<PaymentCanceled />} />
             <Route
               path="/dashboard/*"
               element={
@@ -311,6 +315,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </div>
       </AuthProvider>

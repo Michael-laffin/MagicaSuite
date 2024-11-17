@@ -3,44 +3,44 @@ import { Tool, Category } from './types';
 export const categories: Category[] = [
   {
     id: 'productivity',
-    name: 'Productivity Boosters',
+    name: 'Productivity',
     description: 'Tools to help users manage their time, tasks, and workflows.',
     icon: 'Clock'
   },
   {
     id: 'marketing',
-    name: 'Marketing Wizards',
+    name: 'Marketing',
     description: 'Tools designed to elevate marketing efforts for businesses.',
     icon: 'Megaphone'
   },
   {
     id: 'business',
-    name: 'Business Builders',
+    name: 'Business',
     description: 'Essential tools for entrepreneurs and small businesses.',
-    icon: 'Building'
+    icon: 'Briefcase'
   },
   {
     id: 'creativity',
-    name: 'Creativity Enhancers',
+    name: 'Creativity',
     description: 'Tools to ignite creativity and streamline content creation.',
     icon: 'Palette'
   },
   {
-    id: 'data',
-    name: 'Data & Analytics',
+    id: 'analytics',
+    name: 'Analytics',
     description: 'Tools for analyzing and leveraging data effectively.',
     icon: 'BarChart'
   },
   {
     id: 'tech',
-    name: 'Tech Toolbox',
+    name: 'Tech',
     description: 'Tools for developers, IT professionals, and tech-savvy users.',
     icon: 'Code'
   }
 ];
 
 export const tools: Tool[] = [
-  // Productivity Boosters
+  // Productivity
   {
     id: 'task-manager',
     name: 'Task Manager',
@@ -112,7 +112,7 @@ export const tools: Tool[] = [
     icon: 'CalendarDays'
   },
 
-  // Marketing Wizards
+  // Marketing
   {
     id: 'social-scheduler',
     name: 'Social Media Scheduler',
@@ -184,7 +184,7 @@ export const tools: Tool[] = [
     icon: 'Users'
   },
 
-  // Business Builders
+  // Business
   {
     id: 'invoice-generator',
     name: 'Invoice Generator',
@@ -256,7 +256,7 @@ export const tools: Tool[] = [
     icon: 'LayoutDashboard'
   },
 
-  // Creativity Enhancers
+  // Creativity
   {
     id: 'graphic-designer',
     name: 'Graphic Designer',
@@ -328,79 +328,79 @@ export const tools: Tool[] = [
     icon: 'BarChart2'
   },
 
-  // Data & Analytics
+  // Analytics
   {
     id: 'website-analytics',
     name: 'Website Analytics Tracker',
     description: 'Monitor website traffic and user behavior.',
-    category: 'data',
+    category: 'analytics',
     icon: 'Activity'
   },
   {
     id: 'heatmap-generator',
     name: 'Heatmap Generator',
     description: 'Visualize user interaction on webpages.',
-    category: 'data',
+    category: 'analytics',
     icon: 'Flame'
   },
   {
     id: 'data-dashboard',
     name: 'Data Dashboard',
     description: 'Compile data from multiple sources into one view.',
-    category: 'data',
+    category: 'analytics',
     icon: 'LayoutDashboard'
   },
   {
     id: 'kpi-tracker',
     name: 'KPI Tracker',
     description: 'Set and track key performance indicators for projects.',
-    category: 'data',
+    category: 'analytics',
     icon: 'Target'
   },
   {
     id: 'competitor-analysis',
     name: 'Competitor Analysis',
     description: 'Compare your metrics to industry competitors.',
-    category: 'data',
+    category: 'analytics',
     icon: 'TrendingUp'
   },
   {
     id: 'ab-test',
     name: 'A/B Test Planner',
     description: 'Test variations of ads, designs, and content.',
-    category: 'data',
+    category: 'analytics',
     icon: 'SplitSquare'
   },
   {
     id: 'survey-creator',
     name: 'Survey Creator',
     description: 'Build and distribute surveys to collect user feedback.',
-    category: 'data',
+    category: 'analytics',
     icon: 'ClipboardList'
   },
   {
     id: 'report-generator',
     name: 'Report Generator',
     description: 'Create and share detailed analytics reports.',
-    category: 'data',
+    category: 'analytics',
     icon: 'FileBarChart'
   },
   {
     id: 'data-cleaner',
     name: 'Data Cleaner',
     description: 'Organize, sort, and clean messy data sets.',
-    category: 'data',
+    category: 'analytics',
     icon: 'Filter'
   },
   {
     id: 'trend-analyzer',
     name: 'Trend Analyzer',
     description: 'Discover emerging trends in your industry.',
-    category: 'data',
+    category: 'analytics',
     icon: 'LineChart'
   },
 
-  // Tech Toolbox
+  // Tech
   {
     id: 'code-snippets',
     name: 'Code Snippet Library',
