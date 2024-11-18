@@ -86,28 +86,28 @@ export default function Business() {
       description: 'Create professional invoices.'
     },
     {
-      name: 'CRM System',
+      name: 'Client CRM',
       description: 'Manage customer relationships.'
     },
     {
-      name: 'Project Budget',
-      description: 'Plan and track project costs.'
+      name: 'Project Management',
+      description: 'Plan and track projects.'
     },
     {
       name: 'Business Analytics',
       description: 'Analyze business performance.'
     },
     {
-      name: 'Inventory Manager',
-      description: 'Track stock and supplies.'
+      name: 'Resource Planning',
+      description: 'Manage business resources.'
     },
     {
-      name: 'HR Portal',
-      description: 'Manage employee information.'
+      name: 'Team Management',
+      description: 'Manage team members.'
     },
     {
-      name: 'Contract Manager',
-      description: 'Handle business agreements.'
+      name: 'Expense Tracker',
+      description: 'Track business expenses.'
     },
     {
       name: 'Meeting Scheduler',
@@ -120,13 +120,310 @@ export default function Business() {
   ];
 
   const renderToolContent = (toolName: string) => {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-400 text-lg">
-          {toolName} content coming soon...
-        </p>
-      </div>
-    );
+    switch (toolName) {
+      case 'Invoice Generator':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <input 
+                type="text" 
+                placeholder="Client Name" 
+                className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-purple-500/20 text-white focus:outline-none focus:border-purple-500/50"
+              />
+              <input 
+                type="text" 
+                placeholder="Invoice #" 
+                className="w-32 px-3 py-2 rounded-lg bg-gray-800/50 border border-purple-500/20 text-white focus:outline-none focus:border-purple-500/50"
+              />
+            </div>
+            <div className="space-y-2">
+              {[
+                { item: 'Consulting Services', amount: 1500 },
+                { item: 'Project Management', amount: 2000 }
+              ].map((item, i) => (
+                <div key={i} className="flex justify-between items-center p-2 rounded-lg bg-gray-800/30 border border-purple-500/10">
+                  <span className="text-white">{item.item}</span>
+                  <span className="text-purple-400">${item.amount}</span>
+                </div>
+              ))}
+            </div>
+            <button className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-white transition-colors">
+              Generate Invoice
+            </button>
+          </div>
+        );
+
+      case 'Expense Tracker':
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="p-3 rounded-lg bg-gray-800/30 border border-purple-500/10">
+                <div className="text-gray-400">Total Expenses</div>
+                <div className="text-white text-lg">$8,750</div>
+                <div className="text-sm text-purple-400">This Month</div>
+              </div>
+              <div className="p-3 rounded-lg bg-gray-800/30 border border-purple-500/10">
+                <div className="text-gray-400">Budget</div>
+                <div className="text-white text-lg">$10,000</div>
+                <div className="text-sm text-purple-400">87.5% Used</div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              {[
+                { category: 'Office Supplies', amount: 250 },
+                { category: 'Software', amount: 500 },
+                { category: 'Marketing', amount: 2000 }
+              ].map((expense, i) => (
+                <div key={i} className="flex justify-between items-center p-2 rounded-lg bg-gray-800/30 border border-purple-500/10">
+                  <span className="text-white">{expense.category}</span>
+                  <span className="text-purple-400">${expense.amount}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'Project Management':
+        return (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <select className="px-3 py-2 rounded-lg bg-gray-800/50 border border-purple-500/20 text-white focus:outline-none focus:border-purple-500/50">
+                <option>Active Projects</option>
+                <option>Completed</option>
+                <option>On Hold</option>
+              </select>
+              <button className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-white transition-colors">
+                New Project
+              </button>
+            </div>
+            <div className="space-y-2">
+              {[
+                { name: 'Website Redesign', progress: 75, status: 'On Track' },
+                { name: 'Mobile App', progress: 45, status: 'Delayed' }
+              ].map((project, i) => (
+                <div key={i} className="p-3 rounded-lg bg-gray-800/30 border border-purple-500/10">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-white">{project.name}</span>
+                    <span className="text-purple-400">{project.status}</span>
+                  </div>
+                  <div className="w-full bg-gray-700 h-2 rounded-full">
+                    <div 
+                      className="bg-purple-500 h-full rounded-full" 
+                      style={{width: `${project.progress}%`}}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'Team Management':
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { name: 'Alice', role: 'Designer', status: 'Active' },
+                { name: 'Bob', role: 'Developer', status: 'Away' },
+                { name: 'Charlie', role: 'Manager', status: 'Meeting' }
+              ].map((member, i) => (
+                <div key={i} className="p-3 rounded-lg bg-gray-800/30 border border-purple-500/10">
+                  <div className="text-white">{member.name}</div>
+                  <div className="text-gray-400 text-sm">{member.role}</div>
+                  <div className="text-purple-400 text-sm mt-1">{member.status}</div>
+                </div>
+              ))}
+            </div>
+            <button className="w-full px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-white transition-colors">
+              Manage Team
+            </button>
+          </div>
+        );
+
+      case 'Financial Dashboard':
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: 'Revenue', value: '$45,000', change: '+12%' },
+                { label: 'Expenses', value: '$28,500', change: '-5%' },
+                { label: 'Profit', value: '$16,500', change: '+15%' },
+                { label: 'Cash Flow', value: '$8,200', change: '+8%' }
+              ].map((metric, i) => (
+                <div key={i} className="p-3 rounded-lg bg-gray-800/30 border border-purple-500/10">
+                  <div className="text-gray-400 text-sm">{metric.label}</div>
+                  <div className="text-white text-lg font-bold">{metric.value}</div>
+                  <div className="text-purple-400 text-sm">{metric.change}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'Client CRM':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <input 
+                type="text" 
+                placeholder="Search clients..." 
+                className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-purple-500/20 text-white focus:outline-none focus:border-purple-500/50"
+              />
+              <button className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-white transition-colors">
+                Add Client
+              </button>
+            </div>
+            <div className="space-y-2">
+              {[
+                { name: 'Acme Corp', status: 'Active', value: '$50,000' },
+                { name: 'TechStart', status: 'Prospect', value: '$25,000' }
+              ].map((client, i) => (
+                <div key={i} className="p-3 rounded-lg bg-gray-800/30 border border-purple-500/10">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-white">{client.name}</div>
+                      <div className="text-gray-400 text-sm">{client.status}</div>
+                    </div>
+                    <div className="text-purple-400">{client.value}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'Document Manager':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <select className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-purple-500/20 text-white focus:outline-none focus:border-purple-500/50">
+                <option>All Documents</option>
+                <option>Contracts</option>
+                <option>Proposals</option>
+                <option>Reports</option>
+              </select>
+              <button className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-white transition-colors">
+                Upload
+              </button>
+            </div>
+            <div className="space-y-2">
+              {[
+                { name: 'Q2 Report.pdf', type: 'PDF', size: '2.5 MB' },
+                { name: 'Contract_v2.docx', type: 'Word', size: '1.8 MB' }
+              ].map((doc, i) => (
+                <div key={i} className="flex justify-between items-center p-2 rounded-lg bg-gray-800/30 border border-purple-500/10">
+                  <div>
+                    <div className="text-white">{doc.name}</div>
+                    <div className="text-gray-400 text-sm">{doc.type}</div>
+                  </div>
+                  <div className="text-purple-400">{doc.size}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'Meeting Scheduler':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <input 
+                type="text" 
+                placeholder="Meeting Title" 
+                className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-purple-500/20 text-white focus:outline-none focus:border-purple-500/50"
+              />
+              <input 
+                type="date" 
+                className="w-40 px-3 py-2 rounded-lg bg-gray-800/50 border border-purple-500/20 text-white focus:outline-none focus:border-purple-500/50"
+              />
+            </div>
+            <div className="space-y-2">
+              {[
+                { title: 'Team Sync', time: '10:00 AM', attendees: 5 },
+                { title: 'Client Meeting', time: '2:30 PM', attendees: 3 }
+              ].map((meeting, i) => (
+                <div key={i} className="p-3 rounded-lg bg-gray-800/30 border border-purple-500/10">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="text-white">{meeting.title}</div>
+                      <div className="text-gray-400 text-sm">{meeting.time}</div>
+                    </div>
+                    <div className="text-purple-400">{meeting.attendees} attendees</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'Business Analytics':
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: 'Sales Growth', value: '+23%', period: 'YoY' },
+                { label: 'Customer Retention', value: '85%', period: 'Last 12m' },
+                { label: 'Market Share', value: '12%', period: 'Current' },
+                { label: 'ROI', value: '156%', period: 'Annual' }
+              ].map((metric, i) => (
+                <div key={i} className="p-3 rounded-lg bg-gray-800/30 border border-purple-500/10">
+                  <div className="text-gray-400 text-sm">{metric.label}</div>
+                  <div className="text-white text-lg font-bold">{metric.value}</div>
+                  <div className="text-purple-400 text-sm">{metric.period}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'Resource Planning':
+        return (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <select className="px-3 py-2 rounded-lg bg-gray-800/50 border border-purple-500/20 text-white focus:outline-none focus:border-purple-500/50">
+                <option>All Resources</option>
+                <option>Equipment</option>
+                <option>Personnel</option>
+                <option>Facilities</option>
+              </select>
+              <button className="px-4 py-2 bg-purple-600 hover:bg-purple-500 rounded-lg text-white transition-colors">
+                Add Resource
+              </button>
+            </div>
+            <div className="space-y-2">
+              {[
+                { name: 'Conference Room A', status: 'Available', utilization: '75%' },
+                { name: 'Development Team', status: 'Allocated', utilization: '90%' }
+              ].map((resource, i) => (
+                <div key={i} className="p-3 rounded-lg bg-gray-800/30 border border-purple-500/10">
+                  <div className="flex justify-between items-center mb-2">
+                    <div>
+                      <div className="text-white">{resource.name}</div>
+                      <div className="text-gray-400 text-sm">{resource.status}</div>
+                    </div>
+                    <div className="text-purple-400">{resource.utilization}</div>
+                  </div>
+                  <div className="w-full bg-gray-700 h-2 rounded-full">
+                    <div 
+                      className="bg-purple-500 h-full rounded-full" 
+                      style={{width: resource.utilization}}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-400 text-lg">
+              {toolName} content coming soon...
+            </p>
+          </div>
+        );
+    }
   };
 
   return (

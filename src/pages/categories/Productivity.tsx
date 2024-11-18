@@ -120,13 +120,219 @@ export default function Productivity() {
   ];
 
   const renderToolContent = (toolName: string) => {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-400 text-lg">
-          {toolName} content coming soon...
-        </p>
-      </div>
-    );
+    switch (toolName) {
+      case 'Task Manager':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <input type="text" placeholder="Add a new task..." 
+                className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white focus:outline-none focus:border-emerald-500/50" />
+              <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white transition-colors">
+                Add
+              </button>
+            </div>
+            <div className="space-y-2 max-h-[250px] overflow-y-auto">
+              {/* Sample tasks */}
+              {['Complete project proposal', 'Review documentation', 'Team meeting'].map((task, i) => (
+                <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-gray-800/30 border border-emerald-500/10">
+                  <span className="text-white">{task}</span>
+                  <button className="text-emerald-400 hover:text-emerald-300">✓</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'Time Tracker':
+        return (
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="text-4xl font-bold text-emerald-400">25:00</div>
+              <div className="text-gray-400">Current Session</div>
+            </div>
+            <div className="flex justify-center space-x-2">
+              <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white transition-colors">
+                Start
+              </button>
+              <button className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition-colors">
+                Reset
+              </button>
+            </div>
+          </div>
+        );
+
+      case 'Focus Mode':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-gray-800/30 border border-emerald-500/10">
+              <span className="text-white">Focus Mode</span>
+              <div className="w-12 h-6 bg-emerald-600 rounded-full relative cursor-pointer">
+                <div className="absolute w-5 h-5 bg-white rounded-full top-0.5 left-0.5"></div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-gray-300">
+                <span>Block Notifications</span>
+                <input type="checkbox" className="accent-emerald-500" />
+              </div>
+              <div className="flex items-center justify-between text-gray-300">
+                <span>White Noise</span>
+                <input type="checkbox" className="accent-emerald-500" />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'Project Planner':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <input type="text" placeholder="New project..." 
+                className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white focus:outline-none focus:border-emerald-500/50" />
+              <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white transition-colors">
+                Create
+              </button>
+            </div>
+            <div className="space-y-2">
+              {['Website Redesign', 'Mobile App', 'Marketing Campaign'].map((project, i) => (
+                <div key={i} className="p-2 rounded-lg bg-gray-800/30 border border-emerald-500/10">
+                  <div className="flex justify-between items-center">
+                    <span className="text-white">{project}</span>
+                    <span className="text-emerald-400 text-sm">In Progress</span>
+                  </div>
+                  <div className="mt-2 bg-gray-700 h-2 rounded-full">
+                    <div className="bg-emerald-500 h-full rounded-full" style={{width: `${(i + 1) * 25}%`}}></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'Note Taking':
+        return (
+          <div className="space-y-4">
+            <div className="flex items-center space-x-2">
+              <input type="text" placeholder="Note title..." 
+                className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white focus:outline-none focus:border-emerald-500/50" />
+            </div>
+            <textarea 
+              placeholder="Start typing your note..." 
+              className="w-full h-[200px] px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white focus:outline-none focus:border-emerald-500/50 resize-none"
+            ></textarea>
+          </div>
+        );
+
+      case 'Calendar':
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-7 gap-1">
+              {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                <div key={i} className="text-center text-gray-400">{day}</div>
+              ))}
+              {Array.from({length: 31}, (_, i) => (
+                <div key={i} className="text-center p-2 rounded hover:bg-emerald-500/20 cursor-pointer text-white">
+                  {i + 1}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'Habit Tracker':
+        return (
+          <div className="space-y-4">
+            {['Exercise', 'Reading', 'Meditation'].map((habit, i) => (
+              <div key={i} className="flex items-center justify-between p-2 rounded-lg bg-gray-800/30 border border-emerald-500/10">
+                <span className="text-white">{habit}</span>
+                <div className="flex space-x-1">
+                  {Array.from({length: 7}, (_, j) => (
+                    <div key={j} className="w-6 h-6 rounded-full border border-emerald-500/30 cursor-pointer hover:bg-emerald-500/20"></div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'Goal Setting':
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              {['Learn TypeScript', 'Build Portfolio', 'Network'].map((goal, i) => (
+                <div key={i} className="p-3 rounded-lg bg-gray-800/30 border border-emerald-500/10">
+                  <div className="flex justify-between items-center">
+                    <span className="text-white">{goal}</span>
+                    <select className="bg-gray-700 text-white rounded px-2 py-1 text-sm">
+                      <option>Daily</option>
+                      <option>Weekly</option>
+                      <option>Monthly</option>
+                    </select>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 'Pomodoro Timer':
+        return (
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="text-5xl font-bold text-emerald-400">25:00</div>
+              <div className="text-gray-400 mt-2">Work Session</div>
+            </div>
+            <div className="flex justify-center space-x-2">
+              <button className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white transition-colors">
+                Start
+              </button>
+              <button className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition-colors">
+                Skip
+              </button>
+            </div>
+          </div>
+        );
+
+      case 'Task Analytics':
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-white">
+                <span>Completed Tasks</span>
+                <span>24</span>
+              </div>
+              <div className="flex justify-between items-center text-white">
+                <span>Productivity Score</span>
+                <span className="text-emerald-400">85%</span>
+              </div>
+              <div className="flex justify-between items-center text-white">
+                <span>Focus Time</span>
+                <span>4h 30m</span>
+              </div>
+              <div className="h-32 bg-gray-800/30 rounded-lg border border-emerald-500/10 mt-4">
+                {/* Placeholder for charts */}
+                <div className="flex items-end justify-between h-full p-2">
+                  {Array.from({length: 7}, (_, i) => (
+                    <div key={i} 
+                      className="w-8 bg-emerald-500/50 rounded-t" 
+                      style={{height: `${Math.random() * 100}%`}}
+                    ></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-400 text-lg">
+              {toolName} content coming soon...
+            </p>
+          </div>
+        );
+    }
   };
 
   return (

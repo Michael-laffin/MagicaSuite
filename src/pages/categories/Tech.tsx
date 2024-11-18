@@ -120,13 +120,238 @@ export default function Tech() {
   ];
 
   const renderToolContent = (toolName: string) => {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-gray-400 text-lg">
-          {toolName} content coming soon...
-        </p>
-      </div>
-    );
+    switch (toolName) {
+      case 'Code Editor':
+        return (
+          <div className="flex flex-col h-full space-y-4 p-4">
+            <div className="flex space-x-2 text-sm">
+              <button className="px-3 py-1 bg-purple-500/20 rounded-md hover:bg-purple-500/30">File</button>
+              <button className="px-3 py-1 bg-purple-500/20 rounded-md hover:bg-purple-500/30">Edit</button>
+              <button className="px-3 py-1 bg-purple-500/20 rounded-md hover:bg-purple-500/30">View</button>
+            </div>
+            <div className="flex-grow bg-gray-900 rounded-md p-4 font-mono text-sm">
+              <div className="text-purple-400">// Write your code here</div>
+              <div className="text-gray-300">function hello() {'{'}</div>
+              <div className="text-gray-300 ml-4">console.log("Hello, World!");</div>
+              <div className="text-gray-300">{'}'}</div>
+            </div>
+          </div>
+        );
+
+      case 'API Tester':
+        return (
+          <div className="flex flex-col space-y-4 p-4">
+            <div className="flex space-x-2">
+              <select className="bg-gray-800 text-white px-3 py-1 rounded-md">
+                <option>GET</option>
+                <option>POST</option>
+                <option>PUT</option>
+                <option>DELETE</option>
+              </select>
+              <input
+                type="text"
+                placeholder="Enter API endpoint"
+                className="flex-grow bg-gray-800 text-white px-3 py-1 rounded-md"
+              />
+            </div>
+            <div className="bg-gray-900 rounded-md p-4 h-32">
+              <p className="text-gray-400">Response Preview</p>
+            </div>
+            <button className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition">
+              Send Request
+            </button>
+          </div>
+        );
+
+      case 'Database Manager':
+        return (
+          <div className="flex flex-col space-y-4 p-4">
+            <div className="flex space-x-2">
+              <select className="bg-gray-800 text-white px-3 py-1 rounded-md">
+                <option>MySQL</option>
+                <option>PostgreSQL</option>
+                <option>MongoDB</option>
+              </select>
+              <input
+                type="text"
+                placeholder="Connection string"
+                className="flex-grow bg-gray-800 text-white px-3 py-1 rounded-md"
+              />
+            </div>
+            <textarea
+              placeholder="Enter SQL query"
+              className="bg-gray-900 text-white p-4 rounded-md h-32 font-mono"
+            />
+            <button className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition">
+              Execute Query
+            </button>
+          </div>
+        );
+
+      case 'Git Interface':
+        return (
+          <div className="flex flex-col space-y-4 p-4">
+            <div className="grid grid-cols-2 gap-2">
+              <button className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700">Pull</button>
+              <button className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700">Push</button>
+              <button className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700">Commit</button>
+              <button className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700">Branch</button>
+            </div>
+            <div className="bg-gray-900 rounded-md p-4 h-32">
+              <p className="text-purple-400 mb-2">Current Branch: main</p>
+              <p className="text-gray-400">Modified files: 0</p>
+              <p className="text-gray-400">Staged changes: 0</p>
+            </div>
+          </div>
+        );
+
+      case 'Cloud Console':
+        return (
+          <div className="flex flex-col space-y-4 p-4">
+            <div className="flex space-x-2">
+              <select className="bg-gray-800 text-white px-3 py-1 rounded-md">
+                <option>AWS</option>
+                <option>Azure</option>
+                <option>GCP</option>
+              </select>
+              <select className="bg-gray-800 text-white px-3 py-1 rounded-md">
+                <option>Region: US-East</option>
+                <option>Region: US-West</option>
+                <option>Region: EU</option>
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-900 p-3 rounded-md">
+                <p className="text-gray-400">Active Services</p>
+                <p className="text-xl text-white">4</p>
+              </div>
+              <div className="bg-gray-900 p-3 rounded-md">
+                <p className="text-gray-400">Resources</p>
+                <p className="text-xl text-white">12</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'Terminal':
+        return (
+          <div className="flex flex-col h-full space-y-2 p-4">
+            <div className="flex-grow bg-gray-900 rounded-md p-4 font-mono text-sm">
+              <p className="text-purple-400">$ _</p>
+              <p className="text-gray-400 text-sm mt-2">Type commands here...</p>
+            </div>
+            <div className="flex space-x-2">
+              <button className="px-3 py-1 bg-gray-800 text-white rounded-md hover:bg-gray-700">Clear</button>
+              <button className="px-3 py-1 bg-gray-800 text-white rounded-md hover:bg-gray-700">History</button>
+            </div>
+          </div>
+        );
+
+      case 'DevOps Dashboard':
+        return (
+          <div className="flex flex-col space-y-4 p-4">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-gray-900 p-3 rounded-md">
+                <p className="text-gray-400">Build Status</p>
+                <p className="text-green-400">Passing</p>
+              </div>
+              <div className="bg-gray-900 p-3 rounded-md">
+                <p className="text-gray-400">Deployments</p>
+                <p className="text-purple-400">3/3 Success</p>
+              </div>
+              <div className="bg-gray-900 p-3 rounded-md">
+                <p className="text-gray-400">Tests</p>
+                <p className="text-purple-400">100% Pass</p>
+              </div>
+              <div className="bg-gray-900 p-3 rounded-md">
+                <p className="text-gray-400">Pipeline</p>
+                <p className="text-green-400">Active</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'Security Scanner':
+        return (
+          <div className="flex flex-col space-y-4 p-4">
+            <div className="flex justify-between items-center bg-gray-900 p-4 rounded-md">
+              <div>
+                <p className="text-gray-400">Last Scan</p>
+                <p className="text-white">2 hours ago</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Vulnerabilities</p>
+                <p className="text-green-400">0 Critical</p>
+              </div>
+            </div>
+            <button className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition">
+              Start New Scan
+            </button>
+            <div className="bg-gray-900 p-3 rounded-md">
+              <p className="text-gray-400">Security Score</p>
+              <p className="text-2xl text-green-400">A+</p>
+            </div>
+          </div>
+        );
+
+      case 'Performance Monitor':
+        return (
+          <div className="flex flex-col space-y-4 p-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-gray-900 p-3 rounded-md">
+                <p className="text-gray-400">CPU Usage</p>
+                <p className="text-xl text-white">32%</p>
+              </div>
+              <div className="bg-gray-900 p-3 rounded-md">
+                <p className="text-gray-400">Memory</p>
+                <p className="text-xl text-white">4.2GB</p>
+              </div>
+              <div className="bg-gray-900 p-3 rounded-md">
+                <p className="text-gray-400">Network</p>
+                <p className="text-xl text-white">2.1MB/s</p>
+              </div>
+              <div className="bg-gray-900 p-3 rounded-md">
+                <p className="text-gray-400">Disk I/O</p>
+                <p className="text-xl text-white">150KB/s</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'Documentation Generator':
+        return (
+          <div className="flex flex-col space-y-4 p-4">
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                placeholder="Project name"
+                className="flex-grow bg-gray-800 text-white px-3 py-1 rounded-md"
+              />
+              <select className="bg-gray-800 text-white px-3 py-1 rounded-md">
+                <option>Markdown</option>
+                <option>HTML</option>
+                <option>PDF</option>
+              </select>
+            </div>
+            <div className="bg-gray-900 rounded-md p-4 h-32">
+              <p className="text-purple-400 mb-2"># Documentation Preview</p>
+              <p className="text-gray-400">Project overview and setup instructions will appear here.</p>
+            </div>
+            <button className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition">
+              Generate Docs
+            </button>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-gray-400 text-lg">
+              {toolName} content coming soon...
+            </p>
+          </div>
+        );
+    }
   };
 
   return (
