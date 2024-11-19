@@ -1,76 +1,22 @@
 import React, { useState, useRef } from 'react';
-import { Zap, Sparkles, Palette, Type, Image, Box, Play, Layout, Lightbulb, Book } from 'lucide-react';
+import { Zap, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-interface MagicalToolWindowProps {
-  isOpen: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-  title: string;
-}
+// Import MagicalToolWindow
+import MagicalToolWindow from '../../components/creativity/MagicalToolWindow';
 
-const MagicalToolWindow: React.FC<MagicalToolWindowProps> = ({ isOpen, onClose, children, title }) => {
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop with lighter blur effect */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40"
-            onClick={onClose}
-          />
-
-          {/* Tool Window */}
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0, y: 20 }}
-            animate={{ 
-              scale: 1, 
-              opacity: 1, 
-              y: 0,
-              transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 25
-              }
-            }}
-            exit={{ 
-              scale: 0.8, 
-              opacity: 0, 
-              y: 20,
-              transition: {
-                type: "spring",
-                stiffness: 300,
-                damping: 25
-              }
-            }}
-            className="fixed top-[30%] left-[40%] -translate-x-1/2 -translate-y-1/2 w-[40vw] max-w-[500px] h-[40vh] max-h-[400px] 
-                     bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-gray-900/95 
-                     rounded-xl border border-blue-500/20 shadow-2xl z-50 overflow-hidden"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-blue-500/20">
-              <h3 className="text-lg font-semibold text-white">{title}</h3>
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-4 text-gray-300">
-              {children}
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
-  );
-};
+// Import all tool components
+import DesignCanvas from '../../components/creativity/tools/DesignCanvas';
+import ColorPaletteGenerator from '../../components/creativity/tools/ColorPaletteGenerator';
+import FontPairer from '../../components/creativity/tools/FontPairer';
+import ImageEditor from '../../components/creativity/tools/ImageEditor';
+import IconCreator from '../../components/creativity/tools/IconCreator';
+import MockupGenerator from '../../components/creativity/tools/MockupGenerator';
+import AnimationCreator from '../../components/creativity/tools/AnimationCreator';
+import TemplateLibrary from '../../components/creativity/tools/TemplateLibrary';
+import InspirationBoard from '../../components/creativity/tools/InspirationBoard';
+import StyleGuideGenerator from '../../components/creativity/tools/StyleGuideGenerator';
+import DefaultTool from '../../components/creativity/tools/DefaultTool';
 
 export default function Creativity() {
   const [hoveredTool, setHoveredTool] = useState<string | null>(null);
@@ -122,187 +68,18 @@ export default function Creativity() {
     }
   ];
 
-  const renderToolContent = (toolName: string) => {
-    switch (toolName) {
-      case 'Design Canvas':
-        return (
-          <div className="h-full flex flex-col">
-            <canvas
-              ref={canvasRef}
-              className="border border-gray-600 rounded-lg w-full h-48 mb-4 bg-white/10"
-            />
-            <div className="flex gap-2">
-              <button className="px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 rounded-md text-orange-300">
-                Draw
-              </button>
-              <button className="px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 rounded-md text-orange-300">
-                Clear
-              </button>
-            </div>
-          </div>
-        );
-
-      case 'Color Palette Generator':
-        return (
-          <div className="h-full">
-            <input
-              type="color"
-              value={selectedColor}
-              onChange={(e) => setSelectedColor(e.target.value)}
-              className="mb-4"
-            />
-            <div className="grid grid-cols-5 gap-2">
-              {[...Array(5)].map((_, i) => (
-                <div
-                  key={i}
-                  className="h-20 rounded-lg"
-                  style={{
-                    backgroundColor: selectedColor,
-                    opacity: (i + 1) * 0.2,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        );
-
-      case 'Font Pairer':
-        return (
-          <div className="h-full">
-            <select
-              value={selectedFont}
-              onChange={(e) => setSelectedFont(e.target.value)}
-              className="w-full p-2 mb-4 bg-gray-800 rounded-md"
-            >
-              <option value="Arial">Arial</option>
-              <option value="Times New Roman">Times New Roman</option>
-              <option value="Helvetica">Helvetica</option>
-            </select>
-            <p style={{ fontFamily: selectedFont }} className="text-lg">
-              Sample Text in {selectedFont}
-            </p>
-          </div>
-        );
-
-      case 'Image Editor':
-        return (
-          <div className="h-full flex flex-col items-center justify-center">
-            <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center w-full">
-              <p className="mb-2">Drop an image here or</p>
-              <button className="px-4 py-2 bg-orange-500/20 hover:bg-orange-500/30 rounded-md text-orange-300">
-                Browse Files
-              </button>
-            </div>
-          </div>
-        );
-
-      case 'Icon Creator':
-        return (
-          <div className="h-full grid grid-cols-3 gap-4">
-            {['square', 'circle', 'triangle'].map((shape) => (
-              <div
-                key={shape}
-                className="aspect-square bg-orange-500/20 rounded-lg flex items-center justify-center hover:bg-orange-500/30 cursor-pointer"
-              >
-                {shape}
-              </div>
-            ))}
-          </div>
-        );
-
-      case 'Mockup Generator':
-        return (
-          <div className="h-full">
-            <div className="flex gap-4 mb-4">
-              <button className="px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 rounded-md text-orange-300">
-                Desktop
-              </button>
-              <button className="px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 rounded-md text-orange-300">
-                Mobile
-              </button>
-              <button className="px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 rounded-md text-orange-300">
-                Tablet
-              </button>
-            </div>
-            <div className="border border-gray-600 rounded-lg h-40 flex items-center justify-center">
-              Preview Area
-            </div>
-          </div>
-        );
-
-      case 'Animation Creator':
-        return (
-          <div className="h-full">
-            <div className="flex gap-4 mb-4">
-              <button className="px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 rounded-md text-orange-300">
-                ▶ Play
-              </button>
-              <button className="px-3 py-1 bg-orange-500/20 hover:bg-orange-500/30 rounded-md text-orange-300">
-                ■ Stop
-              </button>
-            </div>
-            <div className="border border-gray-600 rounded-lg h-40 flex items-center justify-center">
-              Animation Preview
-            </div>
-          </div>
-        );
-
-      case 'Template Library':
-        return (
-          <div className="h-full grid grid-cols-2 gap-4">
-            {['Blog', 'Social Media', 'Presentation', 'Business Card'].map((template) => (
-              <div
-                key={template}
-                className="p-4 bg-orange-500/20 rounded-lg hover:bg-orange-500/30 cursor-pointer"
-              >
-                {template}
-              </div>
-            ))}
-          </div>
-        );
-
-      case 'Inspiration Board':
-        return (
-          <div className="h-full grid grid-cols-3 gap-2">
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className="aspect-square bg-orange-500/20 rounded-lg flex items-center justify-center hover:bg-orange-500/30 cursor-pointer"
-              >
-                + Add Image
-              </div>
-            ))}
-          </div>
-        );
-
-      case 'Style Guide Generator':
-        return (
-          <div className="h-full">
-            <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Brand Name"
-                className="w-full p-2 bg-gray-800 rounded-md"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-orange-500/20 rounded-lg">Colors</div>
-              <div className="p-4 bg-orange-500/20 rounded-lg">Typography</div>
-              <div className="p-4 bg-orange-500/20 rounded-lg">Logo Usage</div>
-              <div className="p-4 bg-orange-500/20 rounded-lg">Components</div>
-            </div>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-gray-400 text-lg">
-              {toolName} content coming soon...
-            </p>
-          </div>
-        );
-    }
+  // Mapping tool names to their respective components
+  const toolComponents: { [key: string]: React.FC } = {
+    'Design Canvas': DesignCanvas,
+    'Color Palette Generator': ColorPaletteGenerator,
+    'Font Pairer': FontPairer,
+    'Image Editor': ImageEditor,
+    'Icon Creator': IconCreator,
+    'Mockup Generator': MockupGenerator,
+    'Animation Creator': AnimationCreator,
+    'Template Library': TemplateLibrary,
+    'Inspiration Board': InspirationBoard,
+    'Style Guide Generator': StyleGuideGenerator
   };
 
   return (
@@ -403,60 +180,15 @@ export default function Creativity() {
         {/* Magical Tool Window */}
         <AnimatePresence>
           {activeTool !== null && (
-            <>
-              {/* Backdrop with lighter blur effect */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/20 backdrop-blur-[2px] z-40"
-                onClick={() => setActiveTool(null)}
-              />
-
-              {/* Tool Window */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0, y: 20 }}
-                animate={{ 
-                  scale: 1, 
-                  opacity: 1, 
-                  y: 0,
-                  transition: {
-                    type: "spring",
-                    stiffness: 300,
-                    damping: 25
-                  }
-                }}
-                exit={{ 
-                  scale: 0.8, 
-                  opacity: 0, 
-                  y: 20,
-                  transition: {
-                    type: "spring",
-                    stiffness: 300,
-                    damping: 25
-                  }
-                }}
-                className="fixed top-[30%] left-[40%] -translate-x-1/2 -translate-y-1/2 w-[40vw] max-w-[500px] h-[40vh] max-h-[400px] 
-                       bg-gradient-to-br from-gray-900/95 via-gray-800/95 to-gray-900/95 
-                       rounded-xl border border-blue-500/20 shadow-2xl z-50 overflow-hidden"
-              >
-                {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-blue-500/20">
-                  <h3 className="text-lg font-semibold text-white">{activeTool}</h3>
-                  <button
-                    onClick={() => setActiveTool(null)}
-                    className="text-gray-400 hover:text-white transition-colors"
-                  >
-                    ×
-                  </button>
-                </div>
-
-                {/* Content */}
-                <div className="p-4 text-gray-300">
-                  {activeTool && renderToolContent(activeTool)}
-                </div>
-              </motion.div>
-            </>
+            <MagicalToolWindow
+              isOpen={true}
+              onClose={() => setActiveTool(null)}
+              title={activeTool}
+            >
+              {activeTool && toolComponents[activeTool] && 
+                React.createElement(toolComponents[activeTool])
+              }
+            </MagicalToolWindow>
           )}
         </AnimatePresence>
       </div>
