@@ -1,8 +1,7 @@
 import React from 'react';
 import * as Icons from 'lucide-react';
 import { X } from 'lucide-react';
-import { ToolModalProps } from './types';
-import { categories } from './toolsData';
+import { ToolModalProps, categories } from '../../data/tools';
 
 export default function ToolModal({ tool, isOpen, onClose }: ToolModalProps) {
   if (!tool || !isOpen) return null;

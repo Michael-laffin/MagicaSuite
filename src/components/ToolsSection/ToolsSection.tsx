@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Search, Grid, List, ChevronDown } from 'lucide-react';
-import { categories, tools } from './toolsData';
+import { categories, tools, Tool, CategoryId } from '../../data/tools';
 import ToolCard from './ToolCard';
 import ToolModal from './ToolModal';
-import { Tool, CategoryId } from './types';
 
 export default function ToolsSection() {
   const [searchQuery, setSearchQuery] = useState('');

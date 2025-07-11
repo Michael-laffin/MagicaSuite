@@ -1,5 +1,47 @@
-import { Tool, Category } from './types';
+// Consolidated tool metadata and interfaces
 
+export type CategoryId = 'productivity' | 'marketing' | 'business' | 'creativity' | 'analytics' | 'tech';
+
+export interface Category {
+  id: CategoryId;
+  name: string;
+  description: string;
+  icon: string;
+}
+
+export interface Tool {
+  id: string;
+  name: string;
+  description: string;
+  category: CategoryId;
+  icon: string;
+}
+
+export interface FeaturedToolStats {
+  [key: string]: string;
+}
+
+export interface FeaturedTool {
+  name: string;
+  category: string;
+  description: string;
+  icon: string;
+  bgColor: string;
+  stats: FeaturedToolStats;
+}
+
+export interface ToolCardProps {
+  tool: Tool;
+  onClick: () => void;
+}
+
+export interface ToolModalProps {
+  tool: Tool | null;
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+// Categories data
 export const categories: Category[] = [
   {
     id: 'productivity',
@@ -39,6 +81,59 @@ export const categories: Category[] = [
   }
 ];
 
+// Featured tools data
+export const featuredTools: FeaturedTool[] = [
+  {
+    name: 'Task Manager',
+    category: 'Productivity',
+    description: 'Create, organize, and prioritize tasks with deadlines and reminders.',
+    icon: 'Clock',
+    bgColor: 'from-blue-500 to-indigo-600',
+    stats: { users: '2.3k', rating: '4.8', tasks: '15k+' }
+  },
+  {
+    name: 'Social Media Scheduler',
+    category: 'Marketing',
+    description: 'Schedule and post to multiple platforms with smart recommendations.',
+    icon: 'Megaphone',
+    bgColor: 'from-purple-500 to-pink-600',
+    stats: { posts: '5k+', platforms: '8', users: '1.2k' }
+  },
+  {
+    name: 'Invoice Generator',
+    category: 'Business',
+    description: 'Create professional invoices with customizable templates and tracking.',
+    icon: 'Briefcase',
+    bgColor: 'from-emerald-500 to-teal-600',
+    stats: { invoices: '10k+', templates: '25+', saved: '$500k' }
+  },
+  {
+    name: 'AI Content Writer',
+    category: 'Creativity',
+    description: 'Generate engaging content with advanced AI technology.',
+    icon: 'Palette',
+    bgColor: 'from-orange-500 to-red-600',
+    stats: { words: '1M+', topics: '100+', users: '3.2k' }
+  },
+  {
+    name: 'Website Analytics',
+    category: 'Analytics',
+    description: 'Track and analyze your website performance with real-time insights.',
+    icon: 'BarChart',
+    bgColor: 'from-cyan-500 to-blue-600',
+    stats: { sites: '5k+', metrics: '50+', reports: '100k+' }
+  },
+  {
+    name: 'Code Snippet Library',
+    category: 'Tech',
+    description: 'Store and organize your code snippets with smart search and sharing.',
+    icon: 'Code',
+    bgColor: 'from-gray-700 to-gray-900',
+    stats: { snippets: '25k+', languages: '30+', shares: '10k+' }
+  }
+];
+
+// All tools data - Productivity tools
 export const tools: Tool[] = [
   // Productivity
   {
@@ -97,100 +192,72 @@ export const tools: Tool[] = [
     category: 'productivity',
     icon: 'Clock'
   },
-  {
-    id: 'goal-setter',
-    name: 'Goal Setter',
-    description: 'Break down big goals into manageable milestones.',
-    category: 'productivity',
-    icon: 'Target'
-  },
-  {
-    id: 'daily-planner',
-    name: 'Daily Planner',
-    description: 'Generate personalized daily schedules based on priorities.',
-    category: 'productivity',
-    icon: 'CalendarDays'
-  },
 
   // Marketing
   {
     id: 'social-scheduler',
     name: 'Social Media Scheduler',
-    description: 'Schedule and post to multiple platforms.',
-    category: 'marketing',
-    icon: 'Share2'
-  },
-  {
-    id: 'email-campaign',
-    name: 'Email Campaign Builder',
-    description: 'Design and send professional email campaigns.',
-    category: 'marketing',
-    icon: 'Mail'
-  },
-  {
-    id: 'seo-analyzer',
-    name: 'SEO Analyzer',
-    description: 'Evaluate and improve website SEO performance.',
-    category: 'marketing',
-    icon: 'Search'
-  },
-  {
-    id: 'ad-manager',
-    name: 'Ad Manager',
-    description: 'Track and optimize ad campaigns across platforms.',
-    category: 'marketing',
-    icon: 'LineChart'
-  },
-  {
-    id: 'content-calendar',
-    name: 'Content Calendar',
-    description: 'Plan and organize content across teams.',
+    description: 'Schedule posts across multiple social platforms.',
     category: 'marketing',
     icon: 'Calendar'
   },
   {
-    id: 'hashtag-generator',
-    name: 'Hashtag Generator',
-    description: 'Discover trending hashtags for social posts.',
+    id: 'email-campaigns',
+    name: 'Email Campaign Manager',
+    description: 'Create and send targeted email marketing campaigns.',
     category: 'marketing',
-    icon: 'Hash'
+    icon: 'Mail'
   },
   {
-    id: 'landing-builder',
-    name: 'Landing Page Builder',
-    description: 'Quickly create high-converting landing pages.',
+    id: 'seo-optimizer',
+    name: 'SEO Optimizer',
+    description: 'Analyze and improve your website\'s search engine ranking.',
     category: 'marketing',
-    icon: 'Layout'
+    icon: 'Search'
   },
   {
-    id: 'brand-manager',
-    name: 'Brand Asset Manager',
-    description: 'Organize and store brand assets like logos and fonts.',
+    id: 'content-calendar',
+    name: 'Content Calendar',
+    description: 'Plan and organize your content strategy.',
     category: 'marketing',
-    icon: 'Folder'
+    icon: 'Calendar'
   },
   {
-    id: 'lead-magnet',
-    name: 'Lead Magnet Creator',
-    description: 'Generate forms and downloadables to capture leads.',
+    id: 'lead-generator',
+    name: 'Lead Generator',
+    description: 'Find and capture potential customers.',
     category: 'marketing',
-    icon: 'Download'
+    icon: 'Target'
   },
   {
-    id: 'influencer-tracker',
-    name: 'Influencer Tracker',
-    description: 'Find and manage collaborations with influencers.',
+    id: 'ad-creator',
+    name: 'Ad Creator',
+    description: 'Design compelling advertisements for various platforms.',
+    category: 'marketing',
+    icon: 'Image'
+  },
+  {
+    id: 'influencer-finder',
+    name: 'Influencer Finder',
+    description: 'Discover and connect with relevant influencers.',
     category: 'marketing',
     icon: 'Users'
+  },
+  {
+    id: 'brand-monitor',
+    name: 'Brand Monitor',
+    description: 'Track mentions and sentiment about your brand.',
+    category: 'marketing',
+    icon: 'Eye'
   },
 
   // Business
   {
     id: 'invoice-generator',
     name: 'Invoice Generator',
-    description: 'Create, send, and track invoices with ease.',
+    description: 'Create professional invoices and track payments.',
     category: 'business',
-    icon: 'Receipt'
+    icon: 'FileText'
   },
   {
     id: 'expense-tracker',
@@ -226,34 +293,6 @@ export const tools: Tool[] = [
     description: 'Estimate taxes based on income and expenses.',
     category: 'business',
     icon: 'Calculator'
-  },
-  {
-    id: 'inventory-manager',
-    name: 'Inventory Manager',
-    description: 'Track stock levels and manage inventory.',
-    category: 'business',
-    icon: 'Package'
-  },
-  {
-    id: 'employee-scheduler',
-    name: 'Employee Scheduler',
-    description: 'Manage team schedules and shifts.',
-    category: 'business',
-    icon: 'CalendarRange'
-  },
-  {
-    id: 'payroll-assistant',
-    name: 'Payroll Assistant',
-    description: 'Simplify payroll calculations and reporting.',
-    category: 'business',
-    icon: 'DollarSign'
-  },
-  {
-    id: 'business-dashboard',
-    name: 'Business Dashboard',
-    description: 'View KPIs, reports, and analytics in one place.',
-    category: 'business',
-    icon: 'LayoutDashboard'
   },
 
   // Creativity
@@ -320,35 +359,14 @@ export const tools: Tool[] = [
     category: 'creativity',
     icon: 'Music'
   },
-  {
-    id: 'infographic-builder',
-    name: 'Infographic Builder',
-    description: 'Create data visualizations and infographics.',
-    category: 'creativity',
-    icon: 'BarChart2'
-  },
 
   // Analytics
   {
-    id: 'website-analytics',
-    name: 'Website Analytics Tracker',
-    description: 'Monitor website traffic and user behavior.',
+    id: 'web-analytics',
+    name: 'Website Analytics',
+    description: 'Track website traffic and user behavior.',
     category: 'analytics',
-    icon: 'Activity'
-  },
-  {
-    id: 'heatmap-generator',
-    name: 'Heatmap Generator',
-    description: 'Visualize user interaction on webpages.',
-    category: 'analytics',
-    icon: 'Flame'
-  },
-  {
-    id: 'data-dashboard',
-    name: 'Data Dashboard',
-    description: 'Compile data from multiple sources into one view.',
-    category: 'analytics',
-    icon: 'LayoutDashboard'
+    icon: 'BarChart'
   },
   {
     id: 'kpi-tracker',
@@ -416,39 +434,60 @@ export const tools: Tool[] = [
     icon: 'Webhook'
   },
   {
-    id: 'version-control',
-    name: 'Version Control Viewer',
-    description: 'Monitor changes in Git repositories visually.',
+    id: 'database-manager',
+    name: 'Database Manager',
+    description: 'Manage databases with a visual interface.',
+    category: 'tech',
+    icon: 'Database'
+  },
+  {
+    id: 'git-interface',
+    name: 'Git Interface',
+    description: 'Simplified Git operations with a visual interface.',
     category: 'tech',
     icon: 'GitBranch'
   },
   {
-    id: 'uptime-monitor',
-    name: 'Uptime Monitor',
-    description: 'Track the status and uptime of websites and servers.',
+    id: 'cloud-console',
+    name: 'Cloud Console',
+    description: 'Manage cloud resources from a unified dashboard.',
+    category: 'tech',
+    icon: 'Cloud'
+  },
+  {
+    id: 'terminal',
+    name: 'Terminal',
+    description: 'Access command line tools directly in your browser.',
+    category: 'tech',
+    icon: 'Terminal'
+  },
+  {
+    id: 'devops-dashboard',
+    name: 'DevOps Dashboard',
+    description: 'Monitor deployments and infrastructure health.',
     category: 'tech',
     icon: 'Activity'
   },
   {
-    id: 'dns-checker',
-    name: 'DNS Checker',
-    description: 'Analyze and debug DNS settings.',
+    id: 'security-scanner',
+    name: 'Security Scanner',
+    description: 'Scan code and infrastructure for vulnerabilities.',
     category: 'tech',
-    icon: 'Network'
+    icon: 'Shield'
   },
   {
-    id: 'password-manager',
-    name: 'Password Manager',
-    description: 'Securely store and generate passwords.',
+    id: 'performance-monitor',
+    name: 'Performance Monitor',
+    description: 'Track application performance and optimize bottlenecks.',
     category: 'tech',
-    icon: 'Key'
+    icon: 'Zap'
   },
   {
-    id: 'database-query',
-    name: 'Database Query Tool',
-    description: 'Run and visualize SQL queries.',
+    id: 'documentation-generator',
+    name: 'Documentation Generator',
+    description: 'Auto-generate documentation from code comments.',
     category: 'tech',
-    icon: 'Database'
+    icon: 'Book'
   },
   {
     id: 'regex-tester',
@@ -472,3 +511,23 @@ export const tools: Tool[] = [
     icon: 'Shield'
   }
 ];
+
+// Utility functions
+export const getRandomTools = (count: number = 3): FeaturedTool[] => {
+  const shuffled = [...featuredTools].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+};
+
+export const getToolsByCategory = (categoryId: CategoryId): Tool[] => {
+  return tools.filter(tool => tool.category === categoryId);
+};
+
+export const searchTools = (query: string, categoryId?: CategoryId): Tool[] => {
+  return tools.filter(tool => {
+    const matchesSearch = 
+      tool.name.toLowerCase().includes(query.toLowerCase()) ||
+      tool.description.toLowerCase().includes(query.toLowerCase());
+    const matchesCategory = categoryId ? tool.category === categoryId : true;
+    return matchesSearch && matchesCategory;
+  });
+};

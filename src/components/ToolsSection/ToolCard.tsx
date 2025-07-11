@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import * as Icons from 'lucide-react';
-import { ToolCardProps } from './types';
+import { ToolCardProps, categories } from '../../data/tools';
 import Sparkles from './Sparkles';
 import Stars from './Stars';
-import { categories } from './toolsData';
 
 export default function ToolCard({ tool, onClick }: ToolCardProps) {
   const Icon = Icons[tool.icon as keyof typeof Icons];
