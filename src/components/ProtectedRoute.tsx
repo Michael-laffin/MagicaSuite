@@ -12,7 +12,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
       if (!user) return;
 
       try {
-        const response = await fetch(`http://localhost:3001/api/check-payment-status?userId=${user.uid}`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/check-payment-status?userId=${user.uid}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

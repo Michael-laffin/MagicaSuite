@@ -16,15 +16,15 @@ const PaymentForm: React.FC<PaymentFormProps> = ({ onSuccess, error: propError }
       setLoading(true);
       setError(null);
 
-      const response = await fetch('http://localhost:3001/api/create-checkout-session', {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           customerId: user?.uid,
-          success_url: window.location.origin + '/success?session_id={CHECKOUT_SESSION_ID}',
-          cancel_url: window.location.origin + '/canceled',
+          success_url: import.meta.env.VITE_STRIPE_SUCCESS_URL + '?session_id={CHECKOUT_SESSION_ID}',
+          cancel_url: import.meta.env.VITE_STRIPE_CANCEL_URL,
         }),
       });
 

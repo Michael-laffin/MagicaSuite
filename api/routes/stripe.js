@@ -14,8 +14,8 @@ router.post('/create-checkout-session', async (req, res) => {
                 },
             ],
             mode: 'subscription',
-            success_url: 'http://localhost:5173/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url: 'http://localhost:5173/canceled',
+            success_url: process.env.VITE_STRIPE_SUCCESS_URL + '?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url: process.env.VITE_STRIPE_CANCEL_URL,
         });
 
         res.json({ url: session.url });

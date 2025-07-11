@@ -38,11 +38,11 @@ export default defineConfig(({ command, mode }) => {
       port: 5173,
       proxy: {
         '/.netlify/functions': {
-          target: 'http://localhost:8888',
+          target: env.VITE_API_URL || 'http://localhost:8888',
           changeOrigin: true,
         },
         '/api': {
-          target: 'http://localhost:3001',
+          target: env.VITE_API_URL || 'http://localhost:3001',
           changeOrigin: true,
           secure: false,
         },

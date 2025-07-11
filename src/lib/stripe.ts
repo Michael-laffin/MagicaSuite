@@ -4,7 +4,7 @@ import { loadStripe } from '@stripe/stripe-js';
 export const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
 // API endpoint for creating a subscription
-const API_URL = 'http://localhost:3001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 export const createSubscription = async () => {
   try {

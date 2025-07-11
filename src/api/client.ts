@@ -103,9 +103,7 @@ class ApiClient {
 
 // Create API client instance
 export const createApiClient = (getAuthToken: () => Promise<string | null>) => {
-  const baseUrl = process.env.NODE_ENV === 'production'
-    ? process.env.VITE_API_URL || 'https://your-production-domain.com'
-    : 'http://localhost:8888';
+  const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8888';
 
   return new ApiClient(baseUrl, getAuthToken);
 };

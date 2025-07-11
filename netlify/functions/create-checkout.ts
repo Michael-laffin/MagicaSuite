@@ -102,8 +102,8 @@ export const handler: Handler = async (event, context) => {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.FRONTEND_URL}/dashboard?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.FRONTEND_URL}/pricing`,
+      success_url: `${process.env.VITE_STRIPE_SUCCESS_URL || process.env.FRONTEND_URL + '/dashboard'}?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: process.env.VITE_STRIPE_CANCEL_URL || `${process.env.FRONTEND_URL}/pricing`,
       allow_promotion_codes: true,
       subscription_data: {
         metadata: {
