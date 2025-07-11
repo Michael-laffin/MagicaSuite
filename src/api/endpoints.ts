@@ -27,31 +27,51 @@ export const endpoints = {
     profile: '/.netlify/functions/get-user-profile',
     update: '/.netlify/functions/update-user-profile',
   },
-};
+} as const;
 
 // API hooks
 export const useApi = () => {
-  const { getIdToken } = useAuth();
+  const { getIdToken, user } = useAuth();
+
+  // Create API client with the getIdToken function
+  // This ensures proper Bearer token format: "Bearer <token>"
   const apiClient = createApiClient(getIdToken);
+
+  // Helper function to ensure user is authenticated
+  const ensureAuthenticated = () => {
+    if (!user) {
+      throw new Error('User must be authenticated to perform this action');
+    }
+  };
 
   return {
     subscription: {
-      getStatus: () => 
-        apiClient.get<SubscriptionStatus>(endpoints.subscription.status),
-      
-      createCheckout: () => 
-        apiClient.post<CheckoutSession>(endpoints.subscription.checkout),
-      
-      manage: (action: 'cancel' | 'reactivate' | 'portal') =>
-        apiClient.post<PortalSession>(endpoints.subscription.manage, { action }),
+      getStatus: async () => {
+        ensureAuthenticated();
+        return apiClient.get<SubscriptionStatus>(endpoints.subscription.status);
+      },
+
+      createCheckout: async () => {
+        ensureAuthenticated();
+        return apiClient.post<CheckoutSession>(endpoints.subscription.checkout);
+      },
+
+      manage: async (action: 'cancel' | 'reactivate' | 'portal') => {
+        ensureAuthenticated();
+        return apiClient.post<PortalSession>(endpoints.subscription.manage, { action });
+      },
     },
-    
+
     user: {
-      getProfile: () => 
-        apiClient.get(endpoints.user.profile),
-      
-      updateProfile: (data: unknown) => 
-        apiClient.put(endpoints.user.update, data),
+      getProfile: async () => {
+        ensureAuthenticated();
+        return apiClient.get(endpoints.user.profile);
+      },
+
+      updateProfile: async (data: unknown) => {
+        ensureAuthenticated();
+        return apiClient.put(endpoints.user.update, data);
+      },
     },
   };
 };
