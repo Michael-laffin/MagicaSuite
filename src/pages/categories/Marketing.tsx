@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Zap, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import MagicalToolWindow from '../../components/marketing/MagicalToolWindow';
+import MagicalToolWindow from '../../components/shared/MagicalToolWindow';
 
 // Import all tool components
 import SocialMediaManager from '../../components/marketing/tools/SocialMediaManager';
@@ -186,6 +186,7 @@ const Marketing: React.FC = () => {
           isOpen={activeTool !== null}
           onClose={() => setActiveTool(null)}
           title={activeTool || ''}
+          variant="marketing"
         >
           {activeTool && renderToolContent(activeTool)}
         </MagicalToolWindow>

@@ -3,7 +3,7 @@ import { Zap, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Import MagicalToolWindow
-import MagicalToolWindow from '../../components/analytics/MagicalToolWindow';
+import MagicalToolWindow from '../../components/shared/MagicalToolWindow';
 
 // Import all tool components
 import DataVisualizer from '../../components/analytics/tools/DataVisualizer';
@@ -181,6 +181,7 @@ export default function Analytics() {
               isOpen={true}
               onClose={() => setActiveTool(null)}
               title={activeTool}
+              variant="analytics"
             >
               {activeTool && toolComponents[activeTool] && 
                 React.createElement(toolComponents[activeTool])

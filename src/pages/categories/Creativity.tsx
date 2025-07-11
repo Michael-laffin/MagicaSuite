@@ -3,7 +3,7 @@ import { Zap, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Import MagicalToolWindow
-import MagicalToolWindow from '../../components/creativity/MagicalToolWindow';
+import MagicalToolWindow from '../../components/shared/MagicalToolWindow';
 
 // Import all tool components
 import DesignCanvas from '../../components/creativity/tools/DesignCanvas';
@@ -184,6 +184,7 @@ export default function Creativity() {
               isOpen={true}
               onClose={() => setActiveTool(null)}
               title={activeTool}
+              variant="creativity"
             >
               {activeTool && toolComponents[activeTool] && 
                 React.createElement(toolComponents[activeTool])

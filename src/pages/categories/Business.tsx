@@ -5,7 +5,7 @@ import { Zap, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Import MagicalToolWindow
-import MagicalToolWindow from "../../components/business/MagicalToolWindow";
+import MagicalToolWindow from "../../components/shared/MagicalToolWindow";
 
 // Import all tool components
 import FinancialDashboard from "../../components/business/tools/FinancialDashboard";
@@ -189,6 +189,7 @@ const Business: React.FC = () => {
           isOpen={activeTool !== null}
           onClose={() => setActiveTool(null)}
           title={activeTool || ''}
+          variant="business"
         >
           {activeTool && renderToolContent(activeTool)}
         </MagicalToolWindow>

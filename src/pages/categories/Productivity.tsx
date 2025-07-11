@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Zap, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
-import MagicalToolWindow from '../../components/productivity/MagicalToolWindow';
+import MagicalToolWindow from '../../components/shared/MagicalToolWindow';
 
 // Import the individual tools
 import TaskManager from '../../components/productivity/TaskManager';
@@ -133,7 +133,7 @@ export default function Productivity() {
         </div>
 
         {/* Magical Tool Window */}
-        <MagicalToolWindow isOpen={activeTool !== null} onClose={() => setActiveTool(null)} title={activeTool || ''}>
+        <MagicalToolWindow isOpen={activeTool !== null} onClose={() => setActiveTool(null)} title={activeTool || ''} variant="productivity">
           {activeTool && renderToolContent(activeTool)}
         </MagicalToolWindow>
       </div>

@@ -5,7 +5,7 @@ import { Zap, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Import MagicalToolWindow
-import MagicalToolWindow from '../../components/tech/MagicalToolWindow';
+import MagicalToolWindow from '../../components/shared/MagicalToolWindow';
 
 // Import all tool components
 import CodeEditor from '../../components/tech/tools/CodeEditor';
@@ -191,6 +191,7 @@ const Tech: React.FC = () => {
           isOpen={activeTool !== null}
           onClose={() => setActiveTool(null)}
           title={activeTool || ''}
+          variant="tech"
         >
           {activeTool && renderToolContent(activeTool)}
         </MagicalToolWindow>
