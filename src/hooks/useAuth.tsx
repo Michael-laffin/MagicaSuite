@@ -16,6 +16,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
+  getIdToken: () => Promise<string | null>;
   error: string | null;
 }
 
@@ -26,6 +27,7 @@ const AuthContext = createContext<AuthContextType>({
   signIn: async () => {},
   signInWithGoogle: async () => {},
   logout: async () => {},
+  getIdToken: async () => null,
   error: null
 });
 
@@ -84,15 +86,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const getIdToken = async (): Promise<string | null> => {
+    try {
+      if (!user) {
+        return null;
+      }
+
+      // Get ID token with auto-refresh (forceRefresh = true ensures fresh token)
+      const token = await user.getIdToken(true);
+      return token;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to get ID token';
+      setError(errorMessage);
+      console.error('Error getting ID token:', err);
+      return null;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      loading, 
-      signUp, 
-      signIn, 
-      signInWithGoogle, 
-      logout, 
-      error 
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      signUp,
+      signIn,
+      signInWithGoogle,
+      logout,
+      getIdToken,
+      error
     }}>
       {children}
     </AuthContext.Provider>
