@@ -1,246 +1,172 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { CalendarDays, Sparkles, Plus, Trash2 } from 'lucide-react';
+import { AIToolLayout } from '../ai/AIToolLayout';
+import { useAIChat } from '../ai';
+
+interface DataItem {
+  id: string;
+  title: string;
+  content: string;
+  timestamp: string;
+  aiGenerated?: boolean;
+}
 
 const PomodoroTimer: React.FC = () => {
-  type TimerMode = 'work' | 'shortBreak' | 'longBreak';
+  const [items, setItems] = useState<DataItem[]>([]);
 
-  interface TimerSettings {
-    work: number;
-    shortBreak: number;
-    longBreak: number;
-  }
+  const { messages, isTyping, sendMessage } = useAIChat(
+    "👋 I'm your AI assistant for daily planning! I can help you with daily planner tasks using natural language. Just tell me what you need!"
+  );
 
-  interface TimerStats {
-    completedPomodoros: number;
-    totalWorkTime: number;
-  }
+  const handleMessage = async (message: string) => {
+    await sendMessage(message, { items });
 
-  const defaultSettings: TimerSettings = {
-    work: 25 * 60, // 25 minutes in seconds
-    shortBreak: 5 * 60, // 5 minutes in seconds
-    longBreak: 15 * 60, // 15 minutes in seconds
-  };
+    const lowerMessage = message.toLowerCase();
 
-  const [settings, setSettings] = useState<TimerSettings>(() => {
-    const saved = localStorage.getItem('pomodoroSettings');
-    return saved ? JSON.parse(saved) : defaultSettings;
-  });
-
-  const [stats, setStats] = useState<TimerStats>(() => {
-    const saved = localStorage.getItem('pomodoroStats');
-    return saved
-      ? JSON.parse(saved)
-      : {
-          completedPomodoros: 0,
-          totalWorkTime: 0,
-        };
-  });
-
-  const [timeLeft, setTimeLeft] = useState(settings.work);
-  const [isRunning, setIsRunning] = useState(false);
-  const [mode, setMode] = useState<TimerMode>('work');
-  const [showSettings, setShowSettings] = useState(false);
-
-  useEffect(() => {
-    localStorage.setItem('pomodoroSettings', JSON.stringify(settings));
-  }, [settings]);
-
-  useEffect(() => {
-    localStorage.setItem('pomodoroStats', JSON.stringify(stats));
-  }, [stats]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-
-    if (isRunning && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      handleTimerComplete();
-    }
-
-    return () => clearInterval(interval);
-  }, [isRunning, timeLeft]);
-
-  const handleTimerComplete = () => {
-    setIsRunning(false);
-    playNotificationSound();
-    showNotification();
-
-    if (mode === 'work') {
-      setStats((prev) => ({
-        completedPomodoros: prev.completedPomodoros + 1,
-        totalWorkTime: prev.totalWorkTime + settings.work,
-      }));
-      
-      if (stats.completedPomodoros % 4 === 0) {
-        setMode('longBreak');
-        setTimeLeft(settings.longBreak);
-      } else {
-        setMode('shortBreak');
-        setTimeLeft(settings.shortBreak);
+    // AI-powered message processing
+    if (lowerMessage.includes('create') || lowerMessage.includes('generate') || lowerMessage.includes('add') || lowerMessage.includes('make')) {
+      const newItem: DataItem = {
+        id: Date.now().toString(),
+        title: extractTitle(message),
+        content: message,
+        timestamp: new Date().toISOString(),
+        aiGenerated: true,
+      };
+      setItems(prev => [newItem, ...prev]);
+    } else if (lowerMessage.includes('delete') || lowerMessage.includes('remove') || lowerMessage.includes('clear')) {
+      if (lowerMessage.includes('all')) {
+        setItems([]);
+      } else if (items.length > 0) {
+        setItems(prev => prev.slice(1));
       }
-    } else {
-      setMode('work');
-      setTimeLeft(settings.work);
     }
   };
 
-  const playNotificationSound = () => {
-    const audio = new Audio('/notification-sound.mp3'); // Make sure this file exists
-    audio.play().catch((error) => console.log('Error playing sound:', error));
-  };
+  const extractTitle = (message: string): string => {
+    const patterns = [
+      /create (?:a |an )?(.+?)(?:s+for|s+with|s*$)/i,
+      /generate (?:a |an )?(.+?)(?:s+for|s+with|s*$)/i,
+      /add (?:a |an )?(.+?)(?:s+for|s+with|s*$)/i,
+      /make (?:a |an )?(.+?)(?:s+for|s+with|s*$)/i,
+    ];
 
-  const showNotification = () => {
-    if (Notification.permission === 'granted') {
-      new Notification('Pomodoro Timer', {
-        body: `${mode === 'work' ? 'Take a break!' : 'Back to work!'}`,
-        icon: '/favicon.ico', // Make sure this file exists
-      });
+    for (const pattern of patterns) {
+      const match = message.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim().charAt(0).toUpperCase() + match[1].trim().slice(1);
+      }
     }
+
+    return message.length > 50 ? message.substring(0, 50) + '...' : message;
   };
 
-  const toggleTimer = () => {
-    if (!isRunning && Notification.permission !== 'granted') {
-      Notification.requestPermission();
-    }
-    setIsRunning(!isRunning);
+  const deleteItem = (id: string) => {
+    setItems(prev => prev.filter(item => item.id !== id));
   };
 
-  const resetTimer = () => {
-    setIsRunning(false);
-    setTimeLeft(settings[mode]);
-  };
-
-  const switchMode = (newMode: TimerMode) => {
-    setMode(newMode);
-    setIsRunning(false);
-    setTimeLeft(settings[newMode]);
-  };
-
-  const updateSettings = (key: keyof TimerSettings, minutes: number) => {
-    setSettings((prev) => ({
-      ...prev,
-      [key]: Math.max(1, minutes) * 60,
-    }));
-  };
-
-  const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds
-      .toString()
-      .padStart(2, '0')}`;
-  };
+  const quickActions = [
+    { label: '✨ Create new', prompt: 'Create a new daily planning item' },
+    { label: '💡 Show examples', prompt: 'Show me examples' },
+    { label: '📊 Analyze', prompt: 'Analyze my data' },
+    { label: '⚡ Quick action', prompt: 'Help me with a quick task' },
+  ];
 
   return (
-    <div className="space-y-4">
-      {/* Timer Display */}
-      <div className="text-center">
-        <motion.div
-          className="text-6xl font-bold text-white mb-4"
-          key={timeLeft}
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          {formatTime(timeLeft)}
-        </motion.div>
-
-        {/* Mode Selector */}
-        <div className="flex justify-center space-x-2 mb-4">
-          {(['work', 'shortBreak', 'longBreak'] as TimerMode[]).map((timerMode) => (
-            <button
-              key={timerMode}
-              onClick={() => switchMode(timerMode)}
-              className={`px-4 py-2 rounded-lg ${
-                mode === timerMode
-                  ? 'bg-emerald-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              {timerMode === 'work'
-                ? 'Work'
-                : timerMode === 'shortBreak'
-                ? 'Short Break'
-                : 'Long Break'}
-            </button>
-          ))}
-        </div>
-
-        {/* Controls */}
-        <div className="flex justify-center space-x-2">
+    <AIToolLayout
+      messages={messages}
+      isTyping={isTyping}
+      onSendMessage={handleMessage}
+      quickActions={quickActions}
+      placeholder="Ask me anything or describe what you want to create..."
+      categoryColor="#10b981"
+      toolName="Daily Planner"
+    >
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold flex items-center gap-2" style={{ color: '#10b981' }}>
+            <CalendarDays className="w-5 h-5" />
+            {items.length} Item{items.length !== 1 ? 's' : ''}
+          </h3>
           <button
-            onClick={toggleTimer}
-            className={`px-6 py-2 rounded-lg ${
-              isRunning
-                ? 'bg-red-600 hover:bg-red-500'
-                : 'bg-emerald-600 hover:bg-emerald-500'
-            } text-white`}
+            onClick={() => handleMessage('Create a new item')}
+            className="px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors"
+            style={{
+              backgroundColor: '#10b98120',
+              color: '#10b981',
+              borderColor: '#10b98130',
+            }}
           >
-            {isRunning ? 'Pause' : 'Start'}
-          </button>
-          <button
-            onClick={resetTimer}
-            className="px-6 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white"
-          >
-            Reset
-          </button>
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="px-6 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white"
-          >
-            Settings
+            <Plus className="w-4 h-4" />
+            Quick Create
           </button>
         </div>
-      </div>
 
-      {/* Settings Panel */}
-      {showSettings && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: 'auto' }}
-          exit={{ opacity: 0, height: 0 }}
-          className="space-y-2 p-4 rounded-lg bg-gray-800/30 border border-emerald-500/10"
-        >
-          <h3 className="text-lg font-semibold text-white mb-2">Timer Settings</h3>
+        {items.length === 0 ? (
+          <div className="text-center py-16 text-gray-500">
+            <CalendarDays className="w-12 h-12 mx-auto mb-4 opacity-30" />
+            <p className="text-lg mb-2">No items yet</p>
+            <p className="text-sm">Use AI to create daily planning items!</p>
+            <p className="text-xs mt-3 text-gray-600">
+              Try: "Create a new daily for my project"
+            </p>
+          </div>
+        ) : (
           <div className="space-y-2">
-            {Object.entries(settings).map(([key, value]) => (
-              <div key={key} className="flex items-center justify-between">
-                <label className="text-white">
-                  {key === 'work'
-                    ? 'Work Time'
-                    : key === 'shortBreak'
-                    ? 'Short Break'
-                    : 'Long Break'}
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={Math.floor(value / 60)}
-                  onChange={(e) =>
-                    updateSettings(key as keyof TimerSettings, parseInt(e.target.value))
-                  }
-                  className="w-20 px-2 py-1 rounded bg-gray-700 text-white border border-emerald-500/20"
-                />
-              </div>
+            {items.map((item) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 rounded-lg bg-gray-800/50 border border-gray-700/50 hover:border-opacity-70 transition-all group"
+                style={{ borderColor: '#10b98120' }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="font-medium text-gray-200 truncate">{item.title}</h4>
+                      {item.aiGenerated && (
+                        <span className="flex-shrink-0 text-xs px-2 py-0.5 rounded border" style={{
+                          backgroundColor: '#10b98115',
+                          color: '#10b981',
+                          borderColor: '#10b98140'
+                        }}>
+                          <Sparkles className="w-3 h-3 inline mr-1" />
+                          AI
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-400 line-clamp-2">{item.content}</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {new Date(item.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => deleteItem(item.id)}
+                    className="flex-shrink-0 p-2 opacity-0 group-hover:opacity-100 hover:bg-red-500/20 rounded transition-all"
+                    title="Delete item"
+                  >
+                    <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-400" />
+                  </button>
+                </div>
+              </motion.div>
             ))}
           </div>
-        </motion.div>
-      )}
+        )}
 
-      {/* Stats */}
-      <div className="text-center space-y-1">
-        <p className="text-emerald-100/70">
-          Completed Pomodoros: {stats.completedPomodoros}
-        </p>
-        <p className="text-emerald-100/70">
-          Total Work Time: {Math.floor(stats.totalWorkTime / 3600)}h{' '}
-          {Math.floor((stats.totalWorkTime % 3600) / 60)}m
-        </p>
+        {items.length > 0 && (
+          <div className="pt-4 border-t border-gray-700/30">
+            <div className="flex items-center justify-between text-sm text-gray-400">
+              <span>Total: {items.length} item{items.length !== 1 ? 's' : ''}</span>
+              <span>
+                AI Generated: {items.filter(i => i.aiGenerated).length}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
-    </div>
+    </AIToolLayout>
   );
 };
 

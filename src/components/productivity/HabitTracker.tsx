@@ -1,203 +1,172 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { TrendingUp, Sparkles, Plus, Trash2 } from 'lucide-react';
+import { AIToolLayout } from '../ai/AIToolLayout';
+import { useAIChat } from '../ai';
+
+interface DataItem {
+  id: string;
+  title: string;
+  content: string;
+  timestamp: string;
+  aiGenerated?: boolean;
+}
 
 const HabitTracker: React.FC = () => {
-  interface HabitCompletion {
-    date: string;
-    completed: boolean;
-  }
+  const [items, setItems] = useState<DataItem[]>([]);
 
-  interface Habit {
-    id: number;
-    name: string;
-    frequency: 'daily' | 'weekly';
-    streak: number;
-    completions: HabitCompletion[];
-  }
+  const { messages, isTyping, sendMessage } = useAIChat(
+    "👋 I'm your AI assistant for habit tracking! I can help you with habit tracker tasks using natural language. Just tell me what you need!"
+  );
 
-  const [habits, setHabits] = useState<Habit[]>(() => {
-    const saved = localStorage.getItem('habits');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [newHabitName, setNewHabitName] = useState('');
-  const [newHabitFrequency, setNewHabitFrequency] = useState<'daily' | 'weekly'>('daily');
+  const handleMessage = async (message: string) => {
+    await sendMessage(message, { items });
 
-  useEffect(() => {
-    localStorage.setItem('habits', JSON.stringify(habits));
-  }, [habits]);
+    const lowerMessage = message.toLowerCase();
 
-  const addHabit = () => {
-    if (newHabitName.trim() === '') return;
-    const newHabit: Habit = {
-      id: Date.now(),
-      name: newHabitName.trim(),
-      frequency: newHabitFrequency,
-      streak: 0,
-      completions: [], // Ensure completions is initialized as empty array
-    };
-    setHabits([...habits, newHabit]);
-    setNewHabitName('');
+    // AI-powered message processing
+    if (lowerMessage.includes('create') || lowerMessage.includes('generate') || lowerMessage.includes('add') || lowerMessage.includes('make')) {
+      const newItem: DataItem = {
+        id: Date.now().toString(),
+        title: extractTitle(message),
+        content: message,
+        timestamp: new Date().toISOString(),
+        aiGenerated: true,
+      };
+      setItems(prev => [newItem, ...prev]);
+    } else if (lowerMessage.includes('delete') || lowerMessage.includes('remove') || lowerMessage.includes('clear')) {
+      if (lowerMessage.includes('all')) {
+        setItems([]);
+      } else if (items.length > 0) {
+        setItems(prev => prev.slice(1));
+      }
+    }
   };
 
-  const deleteHabit = (id: number) => {
-    setHabits((prev) => prev.filter((habit) => habit.id !== id));
-  };
+  const extractTitle = (message: string): string => {
+    const patterns = [
+      /create (?:a |an )?(.+?)(?:s+for|s+with|s*$)/i,
+      /generate (?:a |an )?(.+?)(?:s+for|s+with|s*$)/i,
+      /add (?:a |an )?(.+?)(?:s+for|s+with|s*$)/i,
+      /make (?:a |an )?(.+?)(?:s+for|s+with|s*$)/i,
+    ];
 
-  const toggleHabitCompletion = (habitId: number) => {
-    const today = new Date().toISOString().split('T')[0];
-    setHabits((prev) =>
-      prev.map((habit) => {
-        if (habit.id !== habitId) return habit;
-
-        // Initialize completions array if it doesn't exist
-        const completions = habit.completions || [];
-        const existingCompletion = completions.find((c) => c.date === today);
-        let newCompletions;
-        let newStreak;
-
-        if (existingCompletion) {
-          // Toggle existing completion
-          newCompletions = completions.map((c) =>
-            c.date === today ? { ...c, completed: !c.completed } : c
-          );
-        } else {
-          // Add new completion
-          newCompletions = [...completions, { date: today, completed: true }];
-        }
-        newStreak = calculateStreak(newCompletions, habit.frequency);
-
-        return {
-          ...habit,
-          completions: newCompletions,
-          streak: newStreak,
-        };
-      })
-    );
-  };
-
-  const calculateStreak = (completions: HabitCompletion[], frequency: 'daily' | 'weekly') => {
-    if (completions.length === 0) return 0;
-
-    const sortedCompletions = completions
-      .filter((c) => c.completed)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-    if (sortedCompletions.length === 0) return 0;
-
-    let streak = 1;
-    const today = new Date();
-    const latestCompletion = new Date(sortedCompletions[0].date);
-
-    // Check if the latest completion is from today or yesterday (for daily)
-    // or within the current or last week (for weekly)
-    const isRecent =
-      frequency === 'daily'
-        ? Math.abs(today.getTime() - latestCompletion.getTime()) <= 86400000 * 2 // 2 days in milliseconds
-        : Math.abs(today.getTime() - latestCompletion.getTime()) <= 86400000 * 14; // 2 weeks in milliseconds
-
-    if (!isRecent) return 0;
-
-    for (let i = 1; i < sortedCompletions.length; i++) {
-      const current = new Date(sortedCompletions[i].date);
-      const prev = new Date(sortedCompletions[i - 1].date);
-
-      const daysDiff = Math.floor((prev.getTime() - current.getTime()) / (1000 * 60 * 60 * 24));
-
-      if (
-        (frequency === 'daily' && daysDiff === 1) ||
-        (frequency === 'weekly' && daysDiff <= 7)
-      ) {
-        streak++;
-      } else {
-        break;
+    for (const pattern of patterns) {
+      const match = message.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim().charAt(0).toUpperCase() + match[1].trim().slice(1);
       }
     }
 
-    return streak;
+    return message.length > 50 ? message.substring(0, 50) + '...' : message;
   };
 
-  const isHabitCompletedToday = (habit: Habit) => {
-    if (!habit || !habit.completions) return false;
-    const today = new Date().toISOString().split('T')[0];
-    return habit.completions.some((c) => c.date === today && c.completed);
+  const deleteItem = (id: string) => {
+    setItems(prev => prev.filter(item => item.id !== id));
   };
+
+  const quickActions = [
+    { label: '✨ Create new', prompt: 'Create a new habit tracking item' },
+    { label: '💡 Show examples', prompt: 'Show me examples' },
+    { label: '📊 Analyze', prompt: 'Analyze my data' },
+    { label: '⚡ Quick action', prompt: 'Help me with a quick task' },
+  ];
 
   return (
-    <div className="space-y-4">
-      {/* Add New Habit */}
-      <div className="flex items-center space-x-2">
-        <input
-          type="text"
-          placeholder="New habit..."
-          value={newHabitName}
-          onChange={(e) => setNewHabitName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') addHabit();
-          }}
-          className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-        />
-        <select
-          value={newHabitFrequency}
-          onChange={(e) => setNewHabitFrequency(e.target.value as 'daily' | 'weekly')}
-          className="px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-        >
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-        </select>
-        <button
-          onClick={addHabit}
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white"
-        >
-          Add
-        </button>
-      </div>
+    <AIToolLayout
+      messages={messages}
+      isTyping={isTyping}
+      onSendMessage={handleMessage}
+      quickActions={quickActions}
+      placeholder="Ask me anything or describe what you want to create..."
+      categoryColor="#10b981"
+      toolName="Habit Tracker"
+    >
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold flex items-center gap-2" style={{ color: '#10b981' }}>
+            <TrendingUp className="w-5 h-5" />
+            {items.length} Item{items.length !== 1 ? 's' : ''}
+          </h3>
+          <button
+            onClick={() => handleMessage('Create a new item')}
+            className="px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors"
+            style={{
+              backgroundColor: '#10b98120',
+              color: '#10b981',
+              borderColor: '#10b98130',
+            }}
+          >
+            <Plus className="w-4 h-4" />
+            Quick Create
+          </button>
+        </div>
 
-      {/* Habits List */}
-      <div className="space-y-2">
-        {habits.length === 0 ? (
-          <p className="text-center text-gray-400">No habits added yet.</p>
+        {items.length === 0 ? (
+          <div className="text-center py-16 text-gray-500">
+            <TrendingUp className="w-12 h-12 mx-auto mb-4 opacity-30" />
+            <p className="text-lg mb-2">No items yet</p>
+            <p className="text-sm">Use AI to create habit tracking items!</p>
+            <p className="text-xs mt-3 text-gray-600">
+              Try: "Create a new habit for my project"
+            </p>
+          </div>
         ) : (
-          habits.map((habit) => (
-            <motion.div
-              key={habit.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
-              className="p-3 rounded-lg bg-gray-800/30 border border-emerald-500/10 flex items-center justify-between"
-            >
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => toggleHabitCompletion(habit.id)}
-                  className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                    isHabitCompletedToday(habit)
-                      ? 'bg-emerald-500 border-emerald-500'
-                      : 'border-gray-500 hover:border-emerald-500'
-                  }`}
-                >
-                  {isHabitCompletedToday(habit) && (
-                    <span className="text-white text-sm">✓</span>
-                  )}
-                </button>
-                <div>
-                  <h4 className="text-white font-medium">{habit.name}</h4>
-                  <p className="text-sm text-emerald-100/70">
-                    {habit.frequency} • streak: {habit.streak}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => deleteHabit(habit.id)}
-                className="text-red-400 hover:text-red-300"
-                aria-label="Delete Habit"
-                title="Delete Habit"
+          <div className="space-y-2">
+            {items.map((item) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 rounded-lg bg-gray-800/50 border border-gray-700/50 hover:border-opacity-70 transition-all group"
+                style={{ borderColor: '#10b98120' }}
               >
-                ✕
-              </button>
-            </motion.div>
-          ))
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="font-medium text-gray-200 truncate">{item.title}</h4>
+                      {item.aiGenerated && (
+                        <span className="flex-shrink-0 text-xs px-2 py-0.5 rounded border" style={{
+                          backgroundColor: '#10b98115',
+                          color: '#10b981',
+                          borderColor: '#10b98140'
+                        }}>
+                          <Sparkles className="w-3 h-3 inline mr-1" />
+                          AI
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-400 line-clamp-2">{item.content}</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {new Date(item.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => deleteItem(item.id)}
+                    className="flex-shrink-0 p-2 opacity-0 group-hover:opacity-100 hover:bg-red-500/20 rounded transition-all"
+                    title="Delete item"
+                  >
+                    <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-400" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {items.length > 0 && (
+          <div className="pt-4 border-t border-gray-700/30">
+            <div className="flex items-center justify-between text-sm text-gray-400">
+              <span>Total: {items.length} item{items.length !== 1 ? 's' : ''}</span>
+              <span>
+                AI Generated: {items.filter(i => i.aiGenerated).length}
+              </span>
+            </div>
+          </div>
         )}
       </div>
-    </div>
+    </AIToolLayout>
   );
 };
 

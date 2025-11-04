@@ -1,309 +1,172 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Clock, Sparkles, Plus, Trash2 } from 'lucide-react';
+import { AIToolLayout } from '../ai/AIToolLayout';
+import { useAIChat } from '../ai';
+
+interface DataItem {
+  id: string;
+  title: string;
+  content: string;
+  timestamp: string;
+  aiGenerated?: boolean;
+}
 
 const TimeTracker: React.FC = () => {
-  interface TimeEntry {
-    id: number;
-    taskName: string;
-    startTime: number;
-    endTime?: number;
-    duration?: number;
-  }
+  const [items, setItems] = useState<DataItem[]>([]);
 
-  const [entries, setEntries] = useState<TimeEntry[]>(() => {
-    const saved = localStorage.getItem('timeEntries');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { messages, isTyping, sendMessage } = useAIChat(
+    "👋 I'm your AI assistant for time tracking! I can help you with time tracker tasks using natural language. Just tell me what you need!"
+  );
 
-  const [currentTask, setCurrentTask] = useState('');
-  const [isTracking, setIsTracking] = useState<{ [key: number]: boolean }>({});
-  const [startTimes, setStartTimes] = useState<{ [key: number]: number }>({});
-  const [editEntry, setEditEntry] = useState<TimeEntry | null>(null);
-  const [confirmDelete, setConfirmDelete] = useState<TimeEntry | null>(null);
+  const handleMessage = async (message: string) => {
+    await sendMessage(message, { items });
 
-  useEffect(() => {
-    localStorage.setItem('timeEntries', JSON.stringify(entries));
-  }, [entries]);
+    const lowerMessage = message.toLowerCase();
 
-  // Handle tracking multiple tasks
-  const startTracking = () => {
-    if (currentTask.trim() === '') return;
-    const newEntry: TimeEntry = {
-      id: Date.now(),
-      taskName: currentTask.trim(),
-      startTime: Date.now(),
-    };
-    setEntries([newEntry, ...entries]);
-    setIsTracking({ ...isTracking, [newEntry.id]: true });
-    setStartTimes({ ...startTimes, [newEntry.id]: newEntry.startTime });
-    setCurrentTask('');
+    // AI-powered message processing
+    if (lowerMessage.includes('create') || lowerMessage.includes('generate') || lowerMessage.includes('add') || lowerMessage.includes('make')) {
+      const newItem: DataItem = {
+        id: Date.now().toString(),
+        title: extractTitle(message),
+        content: message,
+        timestamp: new Date().toISOString(),
+        aiGenerated: true,
+      };
+      setItems(prev => [newItem, ...prev]);
+    } else if (lowerMessage.includes('delete') || lowerMessage.includes('remove') || lowerMessage.includes('clear')) {
+      if (lowerMessage.includes('all')) {
+        setItems([]);
+      } else if (items.length > 0) {
+        setItems(prev => prev.slice(1));
+      }
+    }
   };
 
-  const stopTracking = (id: number) => {
-    const entry = entries.find((e) => e.id === id);
-    if (!entry || !isTracking[id] || !startTimes[id]) return;
+  const extractTitle = (message: string): string => {
+    const patterns = [
+      /create (?:a |an )?(.+?)(?:s+for|s+with|s*$)/i,
+      /generate (?:a |an )?(.+?)(?:s+for|s+with|s*$)/i,
+      /add (?:a |an )?(.+?)(?:s+for|s+with|s*$)/i,
+      /make (?:a |an )?(.+?)(?:s+for|s+with|s*$)/i,
+    ];
 
-    const endTime = Date.now();
-    const duration = Math.floor((endTime - startTimes[id]) / 1000); // in seconds
+    for (const pattern of patterns) {
+      const match = message.match(pattern);
+      if (match && match[1]) {
+        return match[1].trim().charAt(0).toUpperCase() + match[1].trim().slice(1);
+      }
+    }
 
-    const updatedEntry: TimeEntry = {
-      ...entry,
-      endTime,
-      duration: (entry.duration || 0) + duration,
-    };
-
-    setEntries(entries.map((e) => (e.id === id ? updatedEntry : e)));
-    setIsTracking({ ...isTracking, [id]: false });
-    setStartTimes({ ...startTimes, [id]: 0 });
+    return message.length > 50 ? message.substring(0, 50) + '...' : message;
   };
 
-  const formatTime = (seconds: number) => {
-    const hrs = Math.floor(seconds / 3600)
-      .toString()
-      .padStart(2, '0');
-    const mins = Math.floor((seconds % 3600) / 60)
-      .toString()
-      .padStart(2, '0');
-    const secs = (seconds % 60).toString().padStart(2, '0');
-    return `${hrs}:${mins}:${secs}`;
+  const deleteItem = (id: string) => {
+    setItems(prev => prev.filter(item => item.id !== id));
   };
 
-  const handleEdit = (entry: TimeEntry) => {
-    setEditEntry(entry);
-  };
-
-  const saveEdit = () => {
-    if (!editEntry) return;
-    setEntries(entries.map((e) => (e.id === editEntry.id ? editEntry : e)));
-    setEditEntry(null);
-  };
-
-  const handleDelete = (entry: TimeEntry) => {
-    setConfirmDelete(entry);
-  };
-
-  const confirmDeletion = () => {
-    if (!confirmDelete) return;
-    setEntries(entries.filter((e) => e.id !== confirmDelete.id));
-    setConfirmDelete(null);
-  };
-
-  const exportCSV = () => {
-    const header = ['Task Name', 'Start Time', 'End Time', 'Duration (HH:MM:SS)'];
-    const rows = entries.map((e) => [
-      e.taskName,
-      new Date(e.startTime).toLocaleString(),
-      e.endTime ? new Date(e.endTime).toLocaleString() : 'In Progress',
-      e.duration ? formatTime(e.duration) : 'In Progress',
-    ]);
-
-    const csvContent =
-      'data:text/csv;charset=utf-8,' +
-      [header, ...rows].map((e) => e.join(',')).join('\n');
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.href = encodedUri;
-    link.download = 'time_entries.csv';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // Calculate total time per task
-  const totalTimePerTask = entries.reduce<{ [key: string]: number }>((acc, entry) => {
-    const task = entry.taskName;
-    acc[task] = (acc[task] || 0) + (entry.duration || 0);
-    return acc;
-  }, {});
+  const quickActions = [
+    { label: '✨ Create new', prompt: 'Create a new time tracking item' },
+    { label: '💡 Show examples', prompt: 'Show me examples' },
+    { label: '📊 Analyze', prompt: 'Analyze my data' },
+    { label: '⚡ Quick action', prompt: 'Help me with a quick task' },
+  ];
 
   return (
-    <div className="space-y-6 p-4">
-      {/* Current Task Input */}
-      <div className="flex items-center space-x-2">
-        <input
-          type="text"
-          placeholder="Enter task name..."
-          value={currentTask}
-          onChange={(e) => setCurrentTask(e.target.value)}
-          disabled={false}
-          className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-        />
-        <button
-          onClick={startTracking}
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white transition-colors"
-        >
-          Start
-        </button>
-      </div>
-
-      {/* Export Button */}
-      <div className="flex justify-end">
-        <button
-          onClick={exportCSV}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white transition-colors"
-        >
-          Export CSV
-        </button>
-      </div>
-
-      {/* Total Time Summary */}
-      <div className="space-y-2">
-        <h2 className="text-xl font-semibold text-white">Total Time per Task</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-          {Object.keys(totalTimePerTask).length === 0 ? (
-            <p className="text-gray-400">No tasks recorded.</p>
-          ) : (
-            Object.entries(totalTimePerTask).map(([task, total]) => (
-              <div
-                key={task}
-                className="p-3 rounded-lg bg-gray-800/30 border border-emerald-500/10 flex justify-between items-center"
-              >
-                <span className="text-white">{task}</span>
-                <span className="text-emerald-100/70">{formatTime(total)}</span>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Current Timers */}
+    <AIToolLayout
+      messages={messages}
+      isTyping={isTyping}
+      onSendMessage={handleMessage}
+      quickActions={quickActions}
+      placeholder="Ask me anything or describe what you want to create..."
+      categoryColor="#10b981"
+      toolName="Time Tracker"
+    >
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Active Timers</h2>
-        <div className="space-y-2 max-h-[200px] overflow-y-auto">
-          {entries.filter((e) => isTracking[e.id]).length === 0 ? (
-            <p className="text-gray-400">No active timers.</p>
-          ) : (
-            entries
-              .filter((e) => isTracking[e.id])
-              .map((entry) => (
-                <div
-                  key={entry.id}
-                  className="flex justify-between items-center p-2 rounded-lg bg-gray-800/30 border border-emerald-500/10"
-                >
-                  <div>
-                    <p className="text-white">{entry.taskName}</p>
-                    <div className="text-sm text-emerald-100/70">
-                      {formatTime(
-                        Math.floor((Date.now() - startTimes[entry.id]) / 1000) +
-                          (entry.duration || 0)
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold flex items-center gap-2" style={{ color: '#10b981' }}>
+            <Clock className="w-5 h-5" />
+            {items.length} Item{items.length !== 1 ? 's' : ''}
+          </h3>
+          <button
+            onClick={() => handleMessage('Create a new item')}
+            className="px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors"
+            style={{
+              backgroundColor: '#10b98120',
+              color: '#10b981',
+              borderColor: '#10b98130',
+            }}
+          >
+            <Plus className="w-4 h-4" />
+            Quick Create
+          </button>
+        </div>
+
+        {items.length === 0 ? (
+          <div className="text-center py-16 text-gray-500">
+            <Clock className="w-12 h-12 mx-auto mb-4 opacity-30" />
+            <p className="text-lg mb-2">No items yet</p>
+            <p className="text-sm">Use AI to create time tracking items!</p>
+            <p className="text-xs mt-3 text-gray-600">
+              Try: "Create a new time for my project"
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {items.map((item) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 rounded-lg bg-gray-800/50 border border-gray-700/50 hover:border-opacity-70 transition-all group"
+                style={{ borderColor: '#10b98120' }}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h4 className="font-medium text-gray-200 truncate">{item.title}</h4>
+                      {item.aiGenerated && (
+                        <span className="flex-shrink-0 text-xs px-2 py-0.5 rounded border" style={{
+                          backgroundColor: '#10b98115',
+                          color: '#10b981',
+                          borderColor: '#10b98140'
+                        }}>
+                          <Sparkles className="w-3 h-3 inline mr-1" />
+                          AI
+                        </span>
                       )}
                     </div>
+                    <p className="text-sm text-gray-400 line-clamp-2">{item.content}</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      {new Date(item.timestamp).toLocaleString()}
+                    </p>
                   </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => stopTracking(entry.id)}
-                      className="px-3 py-1 bg-red-600 hover:bg-red-500 rounded-lg text-white transition-colors text-sm"
-                    >
-                      Stop
-                    </button>
-                    <button
-                      onClick={() => handleEdit(entry)}
-                      className="px-3 py-1 bg-yellow-600 hover:bg-yellow-500 rounded-lg text-white transition-colors text-sm"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                </div>
-              ))
-          )}
-        </div>
-      </div>
 
-      {/* Time Entries List */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-white">Time Entries</h2>
-        <div className="space-y-2 max-h-[300px] overflow-y-auto">
-          {entries.length === 0 ? (
-            <p className="text-center text-gray-400">No time entries yet.</p>
-          ) : (
-            entries.map((entry) => (
-              <div
-                key={entry.id}
-                className="flex justify-between items-center p-2 rounded-lg bg-gray-800/30 border border-emerald-500/10"
-              >
-                <div>
-                  <p className="text-white">{entry.taskName}</p>
-                  <p className="text-sm text-emerald-100/70">Duration: {formatTime(entry.duration || 0)}</p>
-                </div>
-                <div className="flex space-x-2 items-center">
-                  <div className="text-sm text-gray-400">
-                    {new Date(entry.startTime).toLocaleTimeString()} -{' '}
-                    {entry.endTime ? new Date(entry.endTime).toLocaleTimeString() : 'In Progress'}
-                  </div>
                   <button
-                    onClick={() => handleEdit(entry)}
-                    className="px-2 py-1 bg-yellow-600 hover:bg-yellow-500 rounded-lg text-white transition-colors text-xs"
+                    onClick={() => deleteItem(item.id)}
+                    className="flex-shrink-0 p-2 opacity-0 group-hover:opacity-100 hover:bg-red-500/20 rounded transition-all"
+                    title="Delete item"
                   >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(entry)}
-                    className="px-2 py-1 bg-red-600 hover:bg-red-500 rounded-lg text-white transition-colors text-xs"
-                  >
-                    Delete
+                    <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-400" />
                   </button>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {items.length > 0 && (
+          <div className="pt-4 border-t border-gray-700/30">
+            <div className="flex items-center justify-between text-sm text-gray-400">
+              <span>Total: {items.length} item{items.length !== 1 ? 's' : ''}</span>
+              <span>
+                AI Generated: {items.filter(i => i.aiGenerated).length}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* Edit Modal */}
-      {editEntry && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-gray-900 p-6 rounded-lg shadow-lg w-80">
-            <h3 className="text-lg font-semibold text-white mb-4">Edit Task</h3>
-            <input
-              type="text"
-              value={editEntry.taskName}
-              onChange={(e) => setEditEntry({ ...editEntry, taskName: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white mb-4"
-            />
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setEditEntry(null)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={saveEdit}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white transition-colors"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Confirm Delete Modal */}
-      {confirmDelete && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-gray-900 p-6 rounded-lg shadow-lg w-80">
-            <h3 className="text-lg font-semibold text-white mb-4">Confirm Deletion</h3>
-            <p className="text-gray-300 mb-4">
-              Are you sure you want to delete the task "{confirmDelete.taskName}"?
-            </p>
-            <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setConfirmDelete(null)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDeletion}
-                className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white transition-colors"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </AIToolLayout>
   );
 };
 

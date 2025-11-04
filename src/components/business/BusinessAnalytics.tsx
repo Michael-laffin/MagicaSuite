@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Sparkles, Plus, Trash2 } from 'lucide-react';
+import { PenTool, Sparkles, Plus, Trash2 } from 'lucide-react';
 import { AIToolLayout } from '../ai/AIToolLayout';
 import { useAIChat } from '../ai';
 
@@ -12,11 +12,11 @@ interface DataItem {
   aiGenerated?: boolean;
 }
 
-const NoteTaking: React.FC = () => {
+const BusinessAnalytics: React.FC = () => {
   const [items, setItems] = useState<DataItem[]>([]);
 
   const { messages, isTyping, sendMessage } = useAIChat(
-    "👋 I'm your AI assistant for note taking! I can help you with note keeper tasks using natural language. Just tell me what you need!"
+    "👋 I'm your AI assistant for document signing! I can help you with e-signature tool tasks using natural language. Just tell me what you need!"
   );
 
   const handleMessage = async (message: string) => {
@@ -66,7 +66,7 @@ const NoteTaking: React.FC = () => {
   };
 
   const quickActions = [
-    { label: '✨ Create new', prompt: 'Create a new note taking item' },
+    { label: '✨ Create new', prompt: 'Create a new document signing item' },
     { label: '💡 Show examples', prompt: 'Show me examples' },
     { label: '📊 Analyze', prompt: 'Analyze my data' },
     { label: '⚡ Quick action', prompt: 'Help me with a quick task' },
@@ -79,22 +79,22 @@ const NoteTaking: React.FC = () => {
       onSendMessage={handleMessage}
       quickActions={quickActions}
       placeholder="Ask me anything or describe what you want to create..."
-      categoryColor="#10b981"
-      toolName="Note Keeper"
+      categoryColor="#22d3ee"
+      toolName="E-Signature Tool"
     >
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold flex items-center gap-2" style={{ color: '#10b981' }}>
-            <FileText className="w-5 h-5" />
+          <h3 className="text-lg font-semibold flex items-center gap-2" style={{ color: '#22d3ee' }}>
+            <PenTool className="w-5 h-5" />
             {items.length} Item{items.length !== 1 ? 's' : ''}
           </h3>
           <button
             onClick={() => handleMessage('Create a new item')}
             className="px-3 py-1.5 rounded-lg text-sm flex items-center gap-2 transition-colors"
             style={{
-              backgroundColor: '#10b98120',
-              color: '#10b981',
-              borderColor: '#10b98130',
+              backgroundColor: '#22d3ee20',
+              color: '#22d3ee',
+              borderColor: '#22d3ee30',
             }}
           >
             <Plus className="w-4 h-4" />
@@ -104,11 +104,11 @@ const NoteTaking: React.FC = () => {
 
         {items.length === 0 ? (
           <div className="text-center py-16 text-gray-500">
-            <FileText className="w-12 h-12 mx-auto mb-4 opacity-30" />
+            <PenTool className="w-12 h-12 mx-auto mb-4 opacity-30" />
             <p className="text-lg mb-2">No items yet</p>
-            <p className="text-sm">Use AI to create note taking items!</p>
+            <p className="text-sm">Use AI to create document signing items!</p>
             <p className="text-xs mt-3 text-gray-600">
-              Try: "Create a new note for my project"
+              Try: "Create a new document for my project"
             </p>
           </div>
         ) : (
@@ -119,7 +119,7 @@ const NoteTaking: React.FC = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="p-4 rounded-lg bg-gray-800/50 border border-gray-700/50 hover:border-opacity-70 transition-all group"
-                style={{ borderColor: '#10b98120' }}
+                style={{ borderColor: '#22d3ee20' }}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
@@ -127,9 +127,9 @@ const NoteTaking: React.FC = () => {
                       <h4 className="font-medium text-gray-200 truncate">{item.title}</h4>
                       {item.aiGenerated && (
                         <span className="flex-shrink-0 text-xs px-2 py-0.5 rounded border" style={{
-                          backgroundColor: '#10b98115',
-                          color: '#10b981',
-                          borderColor: '#10b98140'
+                          backgroundColor: '#22d3ee15',
+                          color: '#22d3ee',
+                          borderColor: '#22d3ee40'
                         }}>
                           <Sparkles className="w-3 h-3 inline mr-1" />
                           AI
@@ -170,4 +170,4 @@ const NoteTaking: React.FC = () => {
   );
 };
 
-export default NoteTaking;
+export default BusinessAnalytics;

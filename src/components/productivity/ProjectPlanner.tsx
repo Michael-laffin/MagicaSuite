@@ -1,265 +1,167 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Folder, CheckCircle, Circle, TrendingUp } from 'lucide-react';
+import { AIToolLayout } from '../ai/AIToolLayout';
+import { useAIChat } from '../ai';
+
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  progress: number;
+  timeline: string;
+  aiGenerated?: boolean;
+  milestones?: string[];
+}
 
 const ProjectPlanner: React.FC = () => {
-  interface Task {
-    id: number;
-    name: string;
-    completed: boolean;
-  }
+  const [projects, setProjects] = useState<Project[]>([]);
+  const { messages, isTyping, sendMessage } = useAIChat(
+    "👋 I'm your AI Project Co-Pilot! I can help you plan projects, create timelines, and break down complex work. Try: 'Plan a website redesign project'"
+  );
 
-  interface Project {
-    id: number;
-    name: string;
-    tasks: Task[];
-    deadline?: string;
-    teamMembers?: string[];
-  }
+  const handleMessage = async (message: string) => {
+    await sendMessage(message, { projects });
 
-  const [newProjectName, setNewProjectName] = useState('');
-  const [projects, setProjects] = useState<Project[]>(() => {
-    const saved = localStorage.getItem('projects');
-    return saved ? JSON.parse(saved) : [];
-  });
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [newTaskName, setNewTaskName] = useState('');
-  const [newTeamMember, setNewTeamMember] = useState('');
-
-  useEffect(() => {
-    localStorage.setItem('projects', JSON.stringify(projects));
-  }, [projects]);
-
-  const addProject = () => {
-    if (newProjectName.trim() !== '') {
-      const newProj: Project = {
-        id: Date.now(),
-        name: newProjectName.trim(),
-        tasks: [],
-        teamMembers: [],
+    const lowerMessage = message.toLowerCase();
+    if (lowerMessage.includes('plan') || lowerMessage.includes('create project') || lowerMessage.includes('start')) {
+      const newProject: Project = {
+        id: Date.now().toString(),
+        name: extractProjectName(message),
+        description: `AI-generated project plan based on: "${message}"`,
+        progress: 0,
+        timeline: calculateTimeline(message),
+        aiGenerated: true,
+        milestones: generateMilestones(message),
       };
-      setProjects([...projects, newProj]);
-      setNewProjectName('');
+      setProjects(prev => [...prev, newProject]);
     }
   };
 
-  const selectProject = (project: Project) => {
-    setSelectedProject(project);
-  };
+  const extractProjectName = (message: string): string => {
+    const patterns = [
+      /plan (?:a |an )?(.+?)(?:\s+project|\s*$)/i,
+      /create (?:a |an )?(.+?)(?:\s+project|\s*$)/i,
+      /start (?:a |an )?(.+?)(?:\s+project|\s*$)/i,
+    ];
 
-  const addTaskToProject = () => {
-    if (newTaskName.trim() !== '' && selectedProject) {
-      const newTask: Task = {
-        id: Date.now(),
-        name: newTaskName.trim(),
-        completed: false,
-      };
-      setProjects((prev) =>
-        prev.map((proj) =>
-          proj.id === selectedProject.id ? { ...proj, tasks: [...proj.tasks, newTask] } : proj
-        )
-      );
-      setNewTaskName('');
+    for (const pattern of patterns) {
+      const match = message.match(pattern);
+      if (match) return match[1].trim() + ' Project';
     }
+    return 'New Project';
   };
 
-  const toggleTaskCompletion = (taskId: number) => {
-    if (selectedProject) {
-      setProjects((prev) =>
-        prev.map((proj) =>
-          proj.id === selectedProject.id
-            ? {
-                ...proj,
-                tasks: proj.tasks.map((task) =>
-                  task.id === taskId ? { ...task, completed: !task.completed } : task
-                ),
-              }
-            : proj
-        )
-      );
-    }
+  const calculateTimeline = (message: string): string => {
+    const lowerMessage = message.toLowerCase();
+    if (lowerMessage.includes('quick') || lowerMessage.includes('simple')) return '2-4 weeks';
+    if (lowerMessage.includes('complex') || lowerMessage.includes('large')) return '3-6 months';
+    return '1-2 months';
   };
 
-  const addTeamMember = () => {
-    if (newTeamMember.trim() !== '' && selectedProject) {
-      setProjects((prev) =>
-        prev.map((proj) =>
-          proj.id === selectedProject.id
-            ? {
-                ...proj,
-                teamMembers: [...(proj.teamMembers || []), newTeamMember.trim()],
-              }
-            : proj
-        )
-      );
-      setNewTeamMember('');
-    }
+  const generateMilestones = (message: string): string[] => {
+    return [
+      'Project kick-off and planning',
+      'Research and requirements gathering',
+      'Design and architecture',
+      'Development phase',
+      'Testing and QA',
+      'Launch and deployment',
+    ];
   };
 
-  const setProjectDeadline = (deadline: string) => {
-    if (selectedProject) {
-      setProjects((prev) =>
-        prev.map((proj) => (proj.id === selectedProject.id ? { ...proj, deadline } : proj))
-      );
-    }
-  };
-
-  const calculateProgress = (project: Project) => {
-    const totalTasks = project.tasks.length;
-    const completedTasks = project.tasks.filter((task) => task.completed).length;
-    return totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-  };
+  const quickActions = [
+    { label: '📊 Plan project', prompt: 'Plan a mobile app development project' },
+    { label: '📅 Create timeline', prompt: 'Create a timeline for a website redesign' },
+    { label: '🎯 Set milestones', prompt: 'Help me set milestones for my project' },
+  ];
 
   return (
-    <div className="space-y-4">
-      {/* Add New Project */}
-      <div className="flex items-center space-x-2">
-        <input
-          type="text"
-          placeholder="New project..."
-          value={newProjectName}
-          onChange={(e) => setNewProjectName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') addProject();
-          }}
-          className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-        />
-        <button
-          onClick={addProject}
-          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white"
-        >
-          Create
-        </button>
-      </div>
-
-      {/* Projects List */}
-      {selectedProject ? (
-        <div className="space-y-4">
-          {/* Back Button */}
-          <button
-            onClick={() => setSelectedProject(null)}
-            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white"
-          >
-            ← Back to Projects
-          </button>
-
-          {/* Project Details */}
-          <h3 className="text-xl font-semibold text-white">{selectedProject.name}</h3>
-          <p className="text-sm text-emerald-100/70">
-            Progress: {calculateProgress(selectedProject).toFixed(0)}%
-          </p>
-
-          {/* Deadline */}
-          <div className="flex items-center space-x-2">
-            <label className="text-white">Deadline:</label>
-            <input
-              type="date"
-              value={selectedProject.deadline || ''}
-              onChange={(e) => setProjectDeadline(e.target.value)}
-              className="px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-            />
-          </div>
-
-          {/* Team Members */}
-          <div className="space-y-2">
-            <h4 className="text-lg font-semibold text-white">Team Members</h4>
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                placeholder="Add team member..."
-                value={newTeamMember}
-                onChange={(e) => setNewTeamMember(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-              />
-              <button
-                onClick={addTeamMember}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white"
-              >
-                Add
-              </button>
-            </div>
-            <div className="flex flex-wrap">
-              {(selectedProject.teamMembers || []).map((member, index) => (
-                <span
-                  key={index}
-                  className="mr-2 mb-2 px-3 py-1 bg-emerald-600 text-white rounded-full"
-                >
-                  {member}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Tasks */}
-          <div className="space-y-2">
-            <h4 className="text-lg font-semibold text-white">Tasks</h4>
-            <div className="flex items-center space-x-2">
-              <input
-                type="text"
-                placeholder="New task..."
-                value={newTaskName}
-                onChange={(e) => setNewTaskName(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') addTaskToProject();
-                }}
-                className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-              />
-              <button
-                onClick={addTaskToProject}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white"
-              >
-                Add
-              </button>
-            </div>
-            <div className="space-y-1 max-h-[200px] overflow-y-auto">
-              {selectedProject.tasks.length === 0 ? (
-                <p className="text-gray-400">No tasks added yet.</p>
-              ) : (
-                selectedProject.tasks.map((task) => (
-                  <div
-                    key={task.id}
-                    className="flex items-center justify-between p-2 rounded-lg bg-gray-800/30 border border-emerald-500/10"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        checked={task.completed}
-                        onChange={() => toggleTaskCompletion(task.id)}
-                        className="accent-emerald-500"
-                      />
-                      <span
-                        className={`text-white ${
-                          task.completed ? 'line-through text-gray-500' : ''
-                        }`}
-                      >
-                        {task.name}
-                      </span>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+    <AIToolLayout
+      messages={messages}
+      isTyping={isTyping}
+      onSendMessage={handleMessage}
+      quickActions={quickActions}
+      placeholder="E.g., 'Plan a marketing campaign project'"
+      categoryColor="#10b981"
+      toolName="AI Project Co-Pilot"
+    >
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-emerald-400 flex items-center gap-2">
+            <Folder className="w-5 h-5" />
+            Active Projects
+          </h3>
+          <span className="text-sm text-gray-400">{projects.length} projects</span>
         </div>
-      ) : (
-        <div className="space-y-2">
-          {projects.length === 0 ? (
-            <p className="text-center text-gray-400">No projects available.</p>
-          ) : (
-            projects.map((project) => (
-              <div
+
+        {projects.length === 0 ? (
+          <div className="text-center py-12 text-gray-500">
+            <p>No projects yet</p>
+            <p className="text-sm mt-2">Use AI to plan a project!</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {projects.map((project) => (
+              <motion.div
                 key={project.id}
-                onClick={() => selectProject(project)}
-                className="p-2 rounded-lg bg-gray-800/30 border border-emerald-500/10 cursor-pointer hover:bg-gray-800/50"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 rounded-lg bg-gray-800/50 border border-gray-700/50"
               >
-                <h4 className="text-white font-semibold">{project.name}</h4>
-                <p className="text-sm text-emerald-100/70">
-                  Progress: {calculateProgress(project).toFixed(0)}%
-                </p>
-              </div>
-            ))
-          )}
-        </div>
-      )}
-    </div>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h4 className="font-medium text-gray-200">{project.name}</h4>
+                      {project.aiGenerated && (
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          AI
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-gray-400">{project.description}</p>
+                  </div>
+                </div>
+
+                <div className="mb-3">
+                  <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+                    <span>Progress</span>
+                    <span>{project.progress}%</span>
+                  </div>
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div
+                      className="bg-emerald-500 h-2 rounded-full transition-all"
+                      style={{ width: `${project.progress}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="text-xs text-gray-400 mb-3">
+                  <TrendingUp className="w-3 h-3 inline mr-1" />
+                  Timeline: {project.timeline}
+                </div>
+
+                {project.milestones && (
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-gray-400 mb-2">Milestones:</p>
+                    {project.milestones.map((milestone, idx) => (
+                      <div key={idx} className="flex items-center gap-2 text-xs text-gray-500">
+                        {idx < project.progress / 20 ? (
+                          <CheckCircle className="w-3 h-3 text-emerald-400" />
+                        ) : (
+                          <Circle className="w-3 h-3" />
+                        )}
+                        <span>{milestone}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+    </AIToolLayout>
   );
 };
 

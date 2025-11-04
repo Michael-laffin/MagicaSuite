@@ -1,362 +1,268 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { Check, Circle, Trash2, Calendar, Flag, Brain } from 'lucide-react';
+import { AIChat, useAIChat, getQuickActionsForTool } from '../ai';
+
+interface Task {
+  id: string;
+  title: string;
+  priority: 'low' | 'medium' | 'high';
+  completed: boolean;
+  dueDate?: string;
+  aiGenerated?: boolean;
+  subtasks?: string[];
+}
 
 const TaskManager: React.FC = () => {
-  interface Task {
-    id: number;
-    name: string;
-    priority: 'Low' | 'Medium' | 'High';
-    dueDate?: string;
-    category?: string;
-    completed: boolean;
-    createdAt: string;
-    completedAt?: string;
-  }
-
-  const [newTask, setNewTask] = useState('');
-  const [priority, setPriority] = useState<'Low' | 'Medium' | 'High'>('Medium');
-  const [dueDate, setDueDate] = useState('');
-  const [category, setCategory] = useState('');
   const [tasks, setTasks] = useState<Task[]>(() => {
-    const saved = localStorage.getItem('tasks');
-    return saved
-      ? JSON.parse(saved)
-      : [
-          {
-            id: 1,
-            name: 'Complete project proposal',
-            priority: 'High',
-            dueDate: '2023-12-31',
-            category: 'Work',
-            completed: false,
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: 2,
-            name: 'Review documentation',
-            priority: 'Medium',
-            dueDate: '2023-11-30',
-            category: 'Work',
-            completed: false,
-            createdAt: new Date().toISOString(),
-          },
-          {
-            id: 3,
-            name: 'Team meeting',
-            priority: 'Low',
-            dueDate: '2023-11-15',
-            category: 'Meetings',
-            completed: false,
-            createdAt: new Date().toISOString(),
-          },
-        ];
+    const saved = localStorage.getItem('ai_tasks');
+    return saved ? JSON.parse(saved) : [];
   });
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [filterStatus, setFilterStatus] = useState<'All' | 'Completed' | 'Incomplete'>('All');
-  const [filterPriority, setFilterPriority] = useState<'All' | 'Low' | 'Medium' | 'High'>('All');
-  const [filterCategory, setFilterCategory] = useState<'All' | string>('All');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
+
+  const { messages, isTyping, sendMessage } = useAIChat(
+    "👋 I'm your AI Task Orchestrator! I can help you create, organize, and prioritize tasks using natural language. Try saying: 'Create a task to finish the project report by Friday'"
+  );
 
   useEffect(() => {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
+    localStorage.setItem('ai_tasks', JSON.stringify(tasks));
   }, [tasks]);
 
-  const addOrUpdateTask = () => {
-    if (newTask.trim() !== '') {
-      if (editingTask) {
-        setTasks((prev) =>
-          prev.map((task) =>
-            task.id === editingTask.id
-              ? {
-                  ...task,
-                  name: newTask.trim(),
-                  priority,
-                  dueDate: dueDate || undefined,
-                  category: category || undefined,
-                }
-              : task
-          )
-        );
-        setEditingTask(null);
-      } else {
-        const newT: Task = {
-          id: Date.now(),
-          name: newTask.trim(),
-          priority,
-          dueDate: dueDate || undefined,
-          category: category || undefined,
-          completed: false,
-          createdAt: new Date().toISOString(),
-        };
-        setTasks([...tasks, newT]);
+  const handleMessage = async (message: string) => {
+    await sendMessage(message, { tasks });
+
+    // Simulate AI task creation
+    const lowerMessage = message.toLowerCase();
+    if (lowerMessage.includes('create') || lowerMessage.includes('add')) {
+      const newTask: Task = {
+        id: Date.now().toString(),
+        title: extractTaskTitle(message),
+        priority: detectPriority(message),
+        completed: false,
+        aiGenerated: true,
+        dueDate: extractDate(message),
+        subtasks: generateSubtasks(message),
+      };
+      setTasks(prev => [newTask, ...prev]);
+    } else if (lowerMessage.includes('complete') || lowerMessage.includes('done')) {
+      // Mark tasks as complete
+      if (tasks.length > 0) {
+        setTasks(prev => prev.map((t, i) => i === 0 ? { ...t, completed: true } : t));
       }
-      setNewTask('');
-      setPriority('Medium');
-      setDueDate('');
-      setCategory('');
+    } else if (lowerMessage.includes('delete') || lowerMessage.includes('remove')) {
+      // Delete completed tasks
+      setTasks(prev => prev.filter(t => !t.completed));
     }
   };
 
-  const toggleCompleteTask = (id: number) => {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id
-          ? {
-              ...task,
-              completed: !task.completed,
-              completedAt: !task.completed ? new Date().toISOString() : undefined,
-            }
-          : task
-      )
-    );
+  const extractTaskTitle = (message: string): string => {
+    const patterns = [
+      /create (?:a )?(?:task|todo) (?:to |for )?(.+?)(?:\s+by|\s+due|\s+for|\s*$)/i,
+      /add (?:a )?(?:task|todo) (?:to |for )?(.+?)(?:\s+by|\s+due|\s+for|\s*$)/i,
+      /remind me to (.+?)(?:\s+by|\s+due|\s+for|\s*$)/i,
+    ];
+
+    for (const pattern of patterns) {
+      const match = message.match(pattern);
+      if (match) return match[1].trim();
+    }
+
+    return message.length > 50 ? message.substring(0, 50) + '...' : message;
   };
 
-  const editTask = (task: Task) => {
-    setEditingTask(task);
-    setNewTask(task.name);
-    setPriority(task.priority);
-    setDueDate(task.dueDate || '');
-    setCategory(task.category || '');
+  const detectPriority = (message: string): 'low' | 'medium' | 'high' => {
+    const lowerMessage = message.toLowerCase();
+    if (lowerMessage.includes('urgent') || lowerMessage.includes('asap') || lowerMessage.includes('critical')) {
+      return 'high';
+    }
+    if (lowerMessage.includes('important') || lowerMessage.includes('priority')) {
+      return 'high';
+    }
+    if (lowerMessage.includes('low priority') || lowerMessage.includes('when possible')) {
+      return 'low';
+    }
+    return 'medium';
   };
 
-  const cancelEdit = () => {
-    setEditingTask(null);
-    setNewTask('');
-    setPriority('Medium');
-    setDueDate('');
-    setCategory('');
+  const extractDate = (message: string): string | undefined => {
+    const today = new Date();
+    const lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.includes('today')) {
+      return today.toISOString().split('T')[0];
+    }
+    if (lowerMessage.includes('tomorrow')) {
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return tomorrow.toISOString().split('T')[0];
+    }
+    if (lowerMessage.includes('next week')) {
+      const nextWeek = new Date(today);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+      return nextWeek.toISOString().split('T')[0];
+    }
+
+    // Try to match day names
+    const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    for (let i = 0; i < days.length; i++) {
+      if (lowerMessage.includes(days[i])) {
+        const targetDay = i;
+        const currentDay = today.getDay();
+        const daysUntil = (targetDay + 7 - currentDay) % 7 || 7;
+        const targetDate = new Date(today);
+        targetDate.setDate(targetDate.getDate() + daysUntil);
+        return targetDate.toISOString().split('T')[0];
+      }
+    }
+
+    return undefined;
   };
 
-  const confirmDeleteTask = (id: number) => {
-    setDeleteTaskId(id);
+  const generateSubtasks = (message: string): string[] | undefined => {
+    const lowerMessage = message.toLowerCase();
+    const subtaskKeywords = ['project', 'report', 'presentation', 'website'];
+
+    for (const keyword of subtaskKeywords) {
+      if (lowerMessage.includes(keyword)) {
+        return [
+          'Research and gather information',
+          'Create outline/structure',
+          'Draft content',
+          'Review and refine',
+          'Final submission',
+        ];
+      }
+    }
+
+    return undefined;
   };
 
-  const deleteTask = () => {
-    if (deleteTaskId !== null) {
-      setTasks((prev) => prev.filter((task) => task.id !== deleteTaskId));
-      setDeleteTaskId(null);
+  const toggleTask = (id: string) => {
+    setTasks(prev => prev.map(task =>
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  };
+
+  const deleteTask = (id: string) => {
+    setTasks(prev => prev.filter(task => task.id !== id));
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'text-red-400';
+      case 'medium': return 'text-yellow-400';
+      case 'low': return 'text-green-400';
+      default: return 'text-gray-400';
     }
   };
 
-  const filteredTasks = tasks.filter((task) => {
-    // Filter by status
-    if (filterStatus === 'Completed' && !task.completed) return false;
-    if (filterStatus === 'Incomplete' && task.completed) return false;
-
-    // Filter by priority
-    if (filterPriority !== 'All' && task.priority !== filterPriority) return false;
-
-    // Filter by category
-    if (filterCategory !== 'All' && task.category !== filterCategory) return false;
-
-    // Search by name
-    if (searchTerm && (!task?.name || !task.name.toLowerCase().includes(searchTerm.toLowerCase()))) return false;
-
-    return true;
-  });
-
-  // Get unique categories for filter options
-  const categories = Array.from(new Set(tasks.map((task) => task.category).filter(Boolean)));
+  const quickActions = getQuickActionsForTool('Task Manager');
 
   return (
-    <div className="space-y-4">
-      {/* Task Form */}
-      <div className="space-y-2">
-        <input
-          type="text"
-          placeholder="Task name..."
-          value={newTask}
-          onChange={(e) => setNewTask(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-        />
-        <div className="flex space-x-2">
-          <select
-            value={priority}
-            onChange={(e) => setPriority(e.target.value as 'Low' | 'Medium' | 'High')}
-            className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-          >
-            <option value="Low">Low Priority</option>
-            <option value="Medium">Medium Priority</option>
-            <option value="High">High Priority</option>
-          </select>
-          <input
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            className="flex-1 px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-          />
-        </div>
-        <input
-          type="text"
-          placeholder="Category..."
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-        />
-        <div className="flex justify-end space-x-2">
-          {editingTask && (
-            <button
-              onClick={cancelEdit}
-              className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition-colors"
-            >
-              Cancel
-            </button>
-          )}
-          <button
-            onClick={addOrUpdateTask}
-            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white transition-colors"
-          >
-            {editingTask ? 'Update Task' : 'Add Task'}
-          </button>
-        </div>
-      </div>
-
-      {/* Filters and Search */}
-      <div className="space-y-2">
-        <div className="flex space-x-2">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value as 'All' | 'Completed' | 'Incomplete')}
-            className="px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-          >
-            <option value="All">All Statuses</option>
-            <option value="Completed">Completed</option>
-            <option value="Incomplete">Incomplete</option>
-          </select>
-          <select
-            value={filterPriority}
-            onChange={(e) => setFilterPriority(e.target.value as 'All' | 'Low' | 'Medium' | 'High')}
-            className="px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-          >
-            <option value="All">All Priorities</option>
-            <option value="Low">Low Priority</option>
-            <option value="Medium">Medium Priority</option>
-            <option value="High">High Priority</option>
-          </select>
-          <select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value as 'All' | string)}
-            className="px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
-          >
-            <option value="All">All Categories</option>
-            {categories.map((cat) => (
-              <option key={cat} value={cat}>
-                {cat}
-              </option>
-            ))}
-          </select>
-        </div>
-        <input
-          type="text"
-          placeholder="Search tasks..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg bg-gray-800/50 border border-emerald-500/20 text-white"
+    <div className="flex gap-4 h-[600px]">
+      {/* AI Chat Interface - Left Side */}
+      <div className="w-1/2">
+        <AIChat
+          messages={messages}
+          onSendMessage={handleMessage}
+          quickActions={quickActions}
+          placeholder="E.g., 'Create a task to review pull requests by tomorrow'"
+          categoryColor="#10b981"
+          isTyping={isTyping}
         />
       </div>
 
-      {/* Task List */}
-      <div className="space-y-2 max-h-[250px] overflow-y-auto">
-        {filteredTasks.length === 0 ? (
-          <p className="text-center text-gray-400">No tasks match your criteria.</p>
-        ) : (
-          <AnimatePresence>
-            {filteredTasks.map((task) => (
+      {/* Task Board - Right Side */}
+      <div className="w-1/2 bg-gray-900/50 rounded-lg border border-gray-700/50 p-4 overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-emerald-400 flex items-center gap-2">
+            <Brain className="w-5 h-5" />
+            Smart Task Board
+          </h3>
+          <span className="text-sm text-gray-400">
+            {tasks.filter(t => !t.completed).length} active
+          </span>
+        </div>
+
+        <div className="space-y-2">
+          {tasks.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <p>No tasks yet. Use AI to create some!</p>
+              <p className="text-sm mt-2">Try: "Create a task to finish the report"</p>
+            </div>
+          ) : (
+            tasks.map((task) => (
               <motion.div
                 key={task.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.3 }}
-                className={`flex items-center justify-between p-2 rounded-lg bg-gray-800/50 border ${
-                  task.completed ? 'border-gray-500' : 'border-emerald-500/20'
+                className={`p-3 rounded-lg border transition-all ${
+                  task.completed
+                    ? 'bg-gray-800/30 border-gray-700/30 opacity-60'
+                    : 'bg-gray-800/50 border-gray-700/50 hover:border-emerald-500/30'
                 }`}
               >
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={task.completed}
-                      onChange={() => toggleCompleteTask(task.id)}
-                      className="accent-emerald-500"
-                    />
-                    <span className={`text-white ${task.completed ? 'line-through text-gray-500' : ''}`}>
-                      {task.name}
-                    </span>
-                  </div>
-                  <div className="text-sm text-emerald-100/70 ml-6">
-                    <p>Priority: {task.priority}</p>
-                    {task.dueDate && <p>Due: {task.dueDate}</p>}
-                    {task.category && <p>Category: {task.category}</p>}
-                    <p>Created At: {task.createdAt}</p>
-                    {task.completedAt && <p>Completed At: {task.completedAt}</p>}
-                  </div>
-                </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-start gap-3">
                   <button
-                    onClick={() => editTask(task)}
-                    className="text-yellow-400 hover:text-yellow-300"
-                    aria-label="Edit Task"
+                    onClick={() => toggleTask(task.id)}
+                    className="mt-1 flex-shrink-0"
                   >
-                    ✎
+                    {task.completed ? (
+                      <Check className="w-5 h-5 text-emerald-400" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-gray-500 hover:text-emerald-400 transition-colors" />
+                    )}
                   </button>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className={`text-sm ${task.completed ? 'line-through text-gray-500' : 'text-gray-200'}`}>
+                        {task.title}
+                      </p>
+                      {task.aiGenerated && (
+                        <span className="text-xs px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                          AI
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                      <span className={`flex items-center gap-1 ${getPriorityColor(task.priority)}`}>
+                        <Flag className="w-3 h-3" />
+                        {task.priority}
+                      </span>
+                      {task.dueDate && (
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          {new Date(task.dueDate).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+
+                    {task.subtasks && task.subtasks.length > 0 && !task.completed && (
+                      <div className="mt-2 ml-2 space-y-1">
+                        {task.subtasks.map((subtask, idx) => (
+                          <div key={idx} className="flex items-center gap-2 text-xs text-gray-400">
+                            <Circle className="w-2 h-2" />
+                            <span>{subtask}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <button
-                    onClick={() => confirmDeleteTask(task.id)}
-                    className="text-red-500 hover:text-red-400"
-                    aria-label="Delete Task"
+                    onClick={() => deleteTask(task.id)}
+                    className="flex-shrink-0 p-1 hover:bg-red-500/20 rounded transition-colors"
                   >
-                    🗑️
-                  </button>
-                  <button
-                    onClick={() => toggleCompleteTask(task.id)}
-                    className="text-emerald-400 hover:text-emerald-300"
-                    aria-label={task.completed ? 'Mark as Incomplete' : 'Mark as Completed'}
-                  >
-                    {task.completed ? '↺' : '✓'}
+                    <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-400" />
                   </button>
                 </div>
               </motion.div>
-            ))}
-          </AnimatePresence>
-        )}
+            ))
+          )}
+        </div>
       </div>
-
-      {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {deleteTaskId !== null && (
-          <motion.div
-            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-gray-800 p-6 rounded-lg shadow-lg text-white"
-              initial={{ scale: 0.8 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0.8 }}
-            >
-              <h3 className="text-lg mb-4">Confirm Deletion</h3>
-              <p>Are you sure you want to delete this task?</p>
-              <div className="flex justify-end space-x-2 mt-4">
-                <button
-                  onClick={() => setDeleteTaskId(null)}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={deleteTask}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white transition-colors"
-                >
-                  Delete
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 };
